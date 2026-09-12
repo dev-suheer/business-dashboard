@@ -62,12 +62,12 @@ export default function FileDropzone({ title, caption, file, onSelect, onClear }
   return (
     <div>
       <div className="flex items-center justify-between mb-2">
-        <span className="text-[13px] font-500 text-txt">{title}</span>
+        <span className="text-[13px] xl:text-[14px] font-500 text-txt">{title}</span>
         <span className="text-[11px] text-mut">{caption}</span>
       </div>
 
       <label
-        className={`group relative flex flex-col items-center justify-center gap-3 h-48 rounded-xl border cursor-pointer transition-colors focus-within:border-emerald/60 ${tone}${
+        className={`group relative flex flex-col items-center justify-center gap-3 xl:gap-3.5 h-48 xl:h-56 rounded-xl border cursor-pointer transition-colors focus-within:border-emerald/60 ${tone}${
           active ? ' drop-active' : ''
         }`}
         {...dropHandlers}
@@ -86,8 +86,8 @@ export default function FileDropzone({ title, caption, file, onSelect, onClear }
         {file ? (
           <>
             <div className="relative">
-              <div className="h-11 w-11 rounded-lg bg-emerald/10 border border-emerald/25 grid place-items-center text-emerald-soft">
-                <Icon name="file" className="h-5 w-5" />
+              <div className="h-11 w-11 xl:h-12 xl:w-12 rounded-lg bg-emerald/10 border border-emerald/25 grid place-items-center text-emerald-soft">
+                <Icon name="file" className="h-5 w-5 xl:h-6 xl:w-6" />
               </div>
               <span className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full bg-emerald border-2 border-ink grid place-items-center text-ink">
                 <Icon name="check" className="h-2.5 w-2.5" />
@@ -95,8 +95,10 @@ export default function FileDropzone({ title, caption, file, onSelect, onClear }
             </div>
 
             <div className="w-full px-6 text-center">
-              <p className="text-[13px] text-txt truncate">{file.name}</p>
-              <p className="text-[11px] text-mut mt-0.5 font-mono">{formatFileDetail(file)}</p>
+              <p className="text-[13px] xl:text-[14px] text-txt truncate">{file.name}</p>
+              <p className="text-[11px] xl:text-[12px] text-mut mt-0.5 font-mono">
+                {formatFileDetail(file)}
+              </p>
             </div>
 
             <div className="flex items-center gap-2">
@@ -116,14 +118,14 @@ export default function FileDropzone({ title, caption, file, onSelect, onClear }
           </>
         ) : (
           <>
-            <div className="h-11 w-11 rounded-lg bg-panel2 border border-line grid place-items-center text-mut group-hover:text-emerald-soft transition-colors">
-              <Icon name="upload" className="h-5 w-5" />
+            <div className="h-11 w-11 xl:h-12 xl:w-12 rounded-lg bg-panel2 border border-line grid place-items-center text-mut group-hover:text-emerald-soft transition-colors">
+              <Icon name="upload" className="h-5 w-5 xl:h-6 xl:w-6" />
             </div>
             <div className="text-center">
-              <p className="text-[13px]">
+              <p className="text-[13px] xl:text-[14px]">
                 <span className="text-emerald-soft font-500">Browse</span> or drag file here
               </p>
-              <p className="text-[11px] text-mut mt-0.5">{ACCEPTED_LABEL}</p>
+              <p className="text-[11px] xl:text-[12px] text-mut mt-0.5">{ACCEPTED_LABEL}</p>
             </div>
           </>
         )}
