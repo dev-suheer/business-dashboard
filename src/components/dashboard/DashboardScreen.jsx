@@ -9,7 +9,7 @@ import OverviewSection from './sections/OverviewSection'
 import PaymentsSection from './sections/PaymentsSection'
 import TrendsSection from './sections/TrendsSection'
 
-export default function DashboardScreen({ runMeta, onRestart }) {
+export default function DashboardScreen({ runMeta, onRestart, onSignOut }) {
   const [navOpen, setNavOpen] = useState(false)
   const { activeId, setActiveId } = useScrollSpy(SECTION_IDS)
 
@@ -27,7 +27,12 @@ export default function DashboardScreen({ runMeta, onRestart }) {
   return (
     <div className="min-h-screen fade-up">
       <div className="flex">
-        <Sidebar activeId={activeId} onNavigate={navigate} onRestart={onRestart} />
+        <Sidebar
+          activeId={activeId}
+          onNavigate={navigate}
+          onRestart={onRestart}
+          onSignOut={onSignOut}
+        />
 
         <div className="flex-1 min-w-0">
           <TopBar runMeta={runMeta} onOpenNav={() => setNavOpen(true)} />
@@ -46,6 +51,7 @@ export default function DashboardScreen({ runMeta, onRestart }) {
         activeId={activeId}
         onNavigate={navigate}
         onRestart={onRestart}
+        onSignOut={onSignOut}
         onClose={closeNav}
       />
     </div>

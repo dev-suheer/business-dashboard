@@ -84,6 +84,45 @@ const ICONS = {
       </>
     ),
   },
+  arrowLeft: {
+    sw: 2.2,
+    body: <path d="M19 12H5m0 0l5 5m-5-5l5-5" strokeLinecap="round" strokeLinejoin="round" />,
+  },
+  eye: {
+    sw: 1.8,
+    body: (
+      <>
+        <path
+          d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"
+          strokeLinejoin="round"
+        />
+        <circle cx="12" cy="12" r="3.2" />
+      </>
+    ),
+  },
+  eyeOff: {
+    sw: 1.8,
+    body: (
+      <>
+        <path
+          d="M10.7 6.2A9 9 0 0112 6c6 0 9.5 6 9.5 6a16 16 0 01-3.4 4M6.5 8.2A16 16 0 002.5 12S6 18 12 18a9 9 0 003.4-.7"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path d="M4 4l16 16" strokeLinecap="round" />
+      </>
+    ),
+  },
+  logout: {
+    sw: 1.8,
+    body: (
+      <>
+        <path d="M12 4H6a2 2 0 00-2 2v12a2 2 0 002 2h6" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M16 16l4-4-4-4" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M20 12H9" strokeLinecap="round" />
+      </>
+    ),
+  },
   check: {
     sw: 2.6,
     body: <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />,

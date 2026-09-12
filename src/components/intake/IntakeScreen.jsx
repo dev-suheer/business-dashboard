@@ -2,10 +2,18 @@ import FileDropzone from './FileDropzone'
 import IntakeHeader from './IntakeHeader'
 import StartBar from './StartBar'
 
-export default function IntakeScreen({ files, ready, hint, onSelect, onClear, onStart }) {
+export default function IntakeScreen({
+  files,
+  ready,
+  hint,
+  onSelect,
+  onClear,
+  onStart,
+  onSignOut,
+}) {
   return (
     <div className="min-h-screen grain flex flex-col">
-      <IntakeHeader />
+      <IntakeHeader onSignOut={onSignOut} />
 
       <main className="flex-1 grid place-items-center px-6 py-12 xl:py-16">
         {/* Scales up from xl only — below that the reference proportions are unchanged. */}

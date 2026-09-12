@@ -41,6 +41,19 @@ export function RestartButton({ onRestart }) {
   )
 }
 
+export function SignOutButton({ onSignOut }) {
+  return (
+    <button
+      type="button"
+      onClick={onSignOut}
+      className="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-line2 h-9 text-[13px] text-mut hover:text-txt hover:border-line2 transition-colors"
+    >
+      <Icon name="logout" className="h-4 w-4" />
+      Sign out
+    </button>
+  )
+}
+
 export function SidebarBrand() {
   return (
     <div className="flex items-center gap-3 px-5 h-16 border-b border-line/70 shrink-0">
@@ -50,13 +63,14 @@ export function SidebarBrand() {
   )
 }
 
-export default function Sidebar({ activeId, onNavigate, onRestart }) {
+export default function Sidebar({ activeId, onNavigate, onRestart, onSignOut }) {
   return (
     <aside className="hidden lg:flex flex-col w-60 shrink-0 border-r border-line/70 min-h-screen sticky top-0 h-screen">
       <SidebarBrand />
       <NavLinks activeId={activeId} onNavigate={onNavigate} />
-      <div className="mt-auto p-3 shrink-0">
+      <div className="mt-auto p-3 shrink-0 space-y-2">
         <RestartButton onRestart={onRestart} />
+        <SignOutButton onSignOut={onSignOut} />
       </div>
     </aside>
   )
