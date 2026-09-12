@@ -1,0 +1,136 @@
+@import "tailwindcss";
+
+/* Port of the reference `tailwind.config` (Tailwind v3 CDN) to v4 CSS-first theme tokens.
+   `--color-emerald-*: initial` clears the built-in emerald scale first, matching v3 where
+   `extend.colors.emerald` replaced the whole palette object. */
+@theme {
+  --color-ink: #0a0f0d;
+  --color-panel: #111917;
+  --color-panel2: #16211c;
+  --color-line: #223029;
+  --color-line2: #2c3d34;
+
+  --color-emerald-*: initial;
+  --color-emerald: #10b981;
+  --color-emerald-soft: #34d399;
+  --color-emerald-deep: #0e7c5a;
+
+  --color-mut: #8a9a90;
+  --color-txt: #e7ede9;
+  --color-warn: #f5a524;
+  --color-bad: #f26d6d;
+
+  --font-display: "Space Grotesk", sans-serif;
+  --font-sans: "Inter", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+}
+
+/* `font-500` / `font-600` are not real Tailwind utilities — they emit no CSS in the
+   reference build, so that text renders at the inherited weight. Pinned to `inherit` so the
+   port stays pixel-identical even if a Tailwind release starts resolving bare numeric
+   font values. Do not swap these for font-medium/font-semibold. */
+.font-500,
+.font-600 {
+  font-weight: inherit;
+}
+
+html,
+body {
+  background: #0a0f0d;
+}
+
+::selection {
+  background: rgba(52, 211, 153, 0.28);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0a0f0d;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #223029;
+  border-radius: 999px;
+  border: 2px solid #0a0f0d;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #2c3d34;
+}
+
+.grain {
+  background-image: radial-gradient(rgba(52, 211, 153, 0.05) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+.glow {
+  box-shadow:
+    0 0 0 1px rgba(16, 185, 129, 0.14),
+    0 24px 60px -28px rgba(16, 185, 129, 0.35);
+}
+
+.fade-up {
+  animation: fadeUp 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Mobile navigation drawer — not in the reference file, which has no sub-lg navigation.
+   Same easing vocabulary as .fade-up. */
+.drawer-in {
+  animation: drawerIn 0.28s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@keyframes drawerIn {
+  from {
+    opacity: 0;
+    transform: translateX(-16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fade-up,
+  .spin,
+  .drawer-in {
+    animation: none !important;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+.drop-active {
+  border-color: #34d399 !important;
+  background: rgba(52, 211, 153, 0.06);
+}
+
+.sec {
+  scroll-margin-top: 84px;
+}

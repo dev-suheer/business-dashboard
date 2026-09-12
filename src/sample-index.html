@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Reconciliation Console</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;450;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        ink: "#0A0F0D",
+        panel: "#111917",
+        panel2: "#16211C",
+        line: "#223029",
+        line2: "#2C3D34",
+        emerald: { DEFAULT: "#10B981", soft: "#34D399", deep: "#0E7C5A" },
+        mut: "#8A9A90",
+        txt: "#E7EDE9",
+        warn: "#F5A524",
+        bad: "#F26D6D"
+      },
+      fontFamily: {
+        display: ["Space Grotesk", "sans-serif"],
+        sans: ["Inter", "sans-serif"],
+        mono: ["JetBrains Mono", "monospace"]
+      }
+    }
+  }
+};
+</script>
+<style>
+  html, body { background: #0A0F0D; }
+  ::selection { background: rgba(52,211,153,0.28); }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: #0A0F0D; }
+  ::-webkit-scrollbar-thumb { background: #223029; border-radius: 999px; border: 2px solid #0A0F0D; }
+  ::-webkit-scrollbar-thumb:hover { background: #2C3D34; }
+  .grain { background-image: radial-gradient(rgba(52,211,153,0.05) 1px, transparent 1px); background-size: 22px 22px; }
+  .glow { box-shadow: 0 0 0 1px rgba(16,185,129,0.14), 0 24px 60px -28px rgba(16,185,129,0.35); }
+  .fade-up { animation: fadeUp .5s cubic-bezier(.2,.7,.2,1) both; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  .spin { animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .fade-up, .spin { animation: none !important; } html { scroll-behavior: auto; } }
+  .drop-active { border-color: #34D399 !important; background: rgba(52,211,153,0.06); }
+  .sec { scroll-margin-top: 84px; }
+</style>
+</head>
+<body class="font-sans text-txt antialiased">
+
+<div id="intake" class="min-h-screen grain flex flex-col">
+  <header class="flex items-center justify-between px-6 md:px-10 h-16 border-b border-line/70">
+    <div class="flex items-center gap-3">
+      <div class="h-8 w-8 rounded-md bg-emerald/15 border border-emerald/40 grid place-items-center">
+        <svg viewBox="0 0 24 24" class="h-4 w-4 text-emerald-soft" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h10" stroke-linecap="round"/></svg>
+      </div>
+      <div class="leading-tight">
+        <p class="font-display font-600 text-[15px] tracking-tight">Reconciliation Console</p>
+        <p class="text-[11px] text-mut">Accounts payable · internal</p>
+      </div>
+    </div>
+    <div class="hidden sm:flex items-center gap-2 text-[12px] text-mut">
+      <span class="h-1.5 w-1.5 rounded-full bg-emerald-soft"></span>
+      Engine ready
+    </div>
+  </header>
+
+  <main class="flex-1 grid place-items-center px-6 py-12">
+    <div class="w-full max-w-4xl fade-up">
+      <div class="mb-10 max-w-2xl">
+        <h1 class="font-display text-3xl md:text-[40px] leading-[1.05] font-600 tracking-tight">Reconcile a vendor statement<br class="hidden md:block"/> against your ledger.</h1>
+        <p class="mt-4 text-[15px] text-mut leading-relaxed max-w-xl">Drop your internal transaction export and the vendor statement below. The engine matches line items, flags variances, and returns a full breakdown with downloadable master, reconciliation, and payment files.</p>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-[13px] font-500 text-txt">Raw data file</span>
+            <span class="text-[11px] text-mut">Internal ledger export</span>
+          </div>
+          <label id="zone-raw" class="group relative flex flex-col items-center justify-center gap-3 h-48 rounded-xl border border-dashed border-line2 bg-panel/60 cursor-pointer transition-colors hover:border-emerald/50">
+            <input id="file-raw" type="file" class="hidden" accept=".xlsx,.xls,.csv" />
+            <div class="h-11 w-11 rounded-lg bg-panel2 border border-line grid place-items-center text-mut group-hover:text-emerald-soft transition-colors">
+              <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 16V4m0 0L8 8m4-4l4 4" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke-linecap="round"/></svg>
+            </div>
+            <div class="text-center">
+              <p class="text-[13px]"><span class="text-emerald-soft font-500">Browse</span> or drag file here</p>
+              <p class="text-[11px] text-mut mt-0.5">XLSX, XLS or CSV</p>
+            </div>
+            <div id="meta-raw" class="hidden absolute inset-x-3 bottom-3 flex items-center gap-2 rounded-lg bg-panel2 border border-line px-3 py-2">
+              <svg viewBox="0 0 24 24" class="h-4 w-4 text-emerald-soft shrink-0" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 2h9l5 5v15H6z" stroke-linejoin="round"/><path d="M14 2v6h6" stroke-linejoin="round"/></svg>
+              <span id="name-raw" class="text-[12px] truncate flex-1"></span>
+              <button type="button" data-clear="raw" class="text-mut hover:text-bad text-[11px]">Remove</button>
+            </div>
+          </label>
+        </div>
+
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-[13px] font-500 text-txt">Vendor statement file</span>
+            <span class="text-[11px] text-mut">From supplier</span>
+          </div>
+          <label id="zone-vendor" class="group relative flex flex-col items-center justify-center gap-3 h-48 rounded-xl border border-dashed border-line2 bg-panel/60 cursor-pointer transition-colors hover:border-emerald/50">
+            <input id="file-vendor" type="file" class="hidden" accept=".xlsx,.xls,.csv,.pdf" />
+            <div class="h-11 w-11 rounded-lg bg-panel2 border border-line grid place-items-center text-mut group-hover:text-emerald-soft transition-colors">
+              <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 16V4m0 0L8 8m4-4l4 4" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke-linecap="round"/></svg>
+            </div>
+            <div class="text-center">
+              <p class="text-[13px]"><span class="text-emerald-soft font-500">Browse</span> or drag file here</p>
+              <p class="text-[11px] text-mut mt-0.5">XLSX, CSV or PDF</p>
+            </div>
+            <div id="meta-vendor" class="hidden absolute inset-x-3 bottom-3 flex items-center gap-2 rounded-lg bg-panel2 border border-line px-3 py-2">
+              <svg viewBox="0 0 24 24" class="h-4 w-4 text-emerald-soft shrink-0" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 2h9l5 5v15H6z" stroke-linejoin="round"/><path d="M14 2v6h6" stroke-linejoin="round"/></svg>
+              <span id="name-vendor" class="text-[12px] truncate flex-1"></span>
+              <button type="button" data-clear="vendor" class="text-mut hover:text-bad text-[11px]">Remove</button>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <div class="mt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <p id="hint" class="text-[12px] text-mut">Both files are required to begin.</p>
+        <button id="start" disabled class="group inline-flex items-center gap-2 rounded-lg bg-emerald px-5 h-11 text-[14px] font-600 text-ink transition-all disabled:opacity-40 disabled:cursor-not-allowed enabled:hover:bg-emerald-soft enabled:glow">
+          Start reconciliation
+          <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14m0 0l-5-5m5 5l-5 5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div id="processing" class="hidden fixed inset-0 z-40 bg-ink/95 backdrop-blur-sm grid place-items-center">
+  <div class="w-full max-w-md px-8 text-center">
+    <div class="mx-auto h-14 w-14 rounded-full border-2 border-line border-t-emerald-soft spin"></div>
+    <h2 class="mt-7 font-display text-xl font-600" id="proc-title">Parsing files</h2>
+    <p class="text-[13px] text-mut mt-1" id="proc-sub">Reading rows and normalizing columns</p>
+    <div class="mt-6 h-1.5 rounded-full bg-panel2 overflow-hidden">
+      <div id="proc-bar" class="h-full w-0 bg-emerald transition-all duration-300 ease-out"></div>
+    </div>
+    <div id="proc-steps" class="mt-6 space-y-2 text-left"></div>
+  </div>
+</div>
+
+<div id="dashboard" class="hidden min-h-screen">
+  <div class="flex">
+    <aside class="hidden lg:flex flex-col w-60 shrink-0 border-r border-line/70 min-h-screen sticky top-0 h-screen">
+      <div class="flex items-center gap-3 px-5 h-16 border-b border-line/70 shrink-0">
+        <div class="h-8 w-8 rounded-md bg-emerald/15 border border-emerald/40 grid place-items-center">
+          <svg viewBox="0 0 24 24" class="h-4 w-4 text-emerald-soft" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h10" stroke-linecap="round"/></svg>
+        </div>
+        <p class="font-display font-600 text-[14px] tracking-tight">Reconciliation</p>
+      </div>
+      <nav id="side-nav" class="p-3 space-y-1 text-[13px]">
+        <a href="#sec-overview" data-target="sec-overview" class="nav-link flex items-center gap-3 rounded-lg px-3 h-9 transition-colors">
+          <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+          Overview
+        </a>
+        <a href="#sec-trends" data-target="sec-trends" class="nav-link flex items-center gap-3 rounded-lg px-3 h-9 transition-colors">
+          <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3v18h18" stroke-linecap="round"/><path d="M7 14l4-4 3 3 5-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Trends &amp; analysis
+        </a>
+        <a href="#sec-payments" data-target="sec-payments" class="nav-link flex items-center gap-3 rounded-lg px-3 h-9 transition-colors">
+          <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Payments
+        </a>
+        <a href="#sec-items" data-target="sec-items" class="nav-link flex items-center gap-3 rounded-lg px-3 h-9 transition-colors">
+          <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h16M4 18h16" stroke-linecap="round"/></svg>
+          Line items
+        </a>
+      </nav>
+      <div class="mt-auto p-3 shrink-0">
+        <button id="restart" class="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-line2 h-9 text-[13px] text-mut hover:text-txt hover:border-line2 transition-colors">
+          <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12a9 9 0 019-9 9 9 0 016.7 3M21 12a9 9 0 01-9 9 9 9 0 01-6.7-3" stroke-linecap="round"/><path d="M18 3v4h-4M6 21v-4h4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          New reconciliation
+        </button>
+      </div>
+    </aside>
+
+    <div class="flex-1 min-w-0">
+      <header class="sticky top-0 z-20 flex items-center justify-between gap-4 px-5 md:px-8 h-16 bg-ink/85 backdrop-blur border-b border-line/70">
+        <div class="min-w-0">
+          <h1 class="font-display font-600 text-[16px] tracking-tight truncate">Reconciliation summary</h1>
+          <p class="text-[11px] text-mut" id="run-meta"></p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button data-dl="master" class="inline-flex items-center gap-2 rounded-lg border border-line2 bg-panel px-3 h-9 text-[12.5px] font-500 hover:border-emerald/50 hover:text-emerald-soft transition-colors">
+            <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12m0 0l4-4m-4 4l-4-4" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 21h14" stroke-linecap="round"/></svg>
+            <span class="hidden md:inline">Master data</span>
+          </button>
+          <button data-dl="recon" class="inline-flex items-center gap-2 rounded-lg border border-line2 bg-panel px-3 h-9 text-[12.5px] font-500 hover:border-emerald/50 hover:text-emerald-soft transition-colors">
+            <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12m0 0l4-4m-4 4l-4-4" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 21h14" stroke-linecap="round"/></svg>
+            <span class="hidden md:inline">Reconciliation</span>
+          </button>
+          <button data-dl="payments" class="inline-flex items-center gap-2 rounded-lg bg-emerald px-3 h-9 text-[12.5px] font-600 text-ink hover:bg-emerald-soft transition-colors">
+            <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12m0 0l4-4m-4 4l-4-4" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 21h14" stroke-linecap="round"/></svg>
+            <span class="hidden md:inline">Payments</span>
+          </button>
+        </div>
+      </header>
+
+      <main class="p-5 md:p-8 space-y-10">
+        <section id="sec-overview" class="sec space-y-4">
+          <div class="grid grid-cols-2 xl:grid-cols-4 gap-4" id="kpis"></div>
+          <div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
+            <div class="xl:col-span-2 rounded-xl border border-line/70 bg-panel/50 p-5">
+              <div class="flex items-center justify-between mb-4">
+                <div>
+                  <h3 class="font-display font-600 text-[15px]">Ledger vs vendor by month</h3>
+                  <p class="text-[11px] text-mut">Posted amount, last 8 periods</p>
+                </div>
+                <div class="flex items-center gap-4 text-[11px]">
+                  <span class="inline-flex items-center gap-1.5 text-mut"><span class="h-2 w-2 rounded-sm bg-emerald"></span>Ledger</span>
+                  <span class="inline-flex items-center gap-1.5 text-mut"><span class="h-2 w-2 rounded-sm bg-warn"></span>Vendor</span>
+                </div>
+              </div>
+              <div class="h-64"><canvas id="c-trend"></canvas></div>
+            </div>
+
+            <div class="rounded-xl border border-line/70 bg-panel/50 p-5">
+              <h3 class="font-display font-600 text-[15px]">Match breakdown</h3>
+              <p class="text-[11px] text-mut mb-2">Share of line items</p>
+              <div class="h-44 relative">
+                <canvas id="c-donut"></canvas>
+                <div class="absolute inset-0 grid place-items-center pointer-events-none">
+                  <div class="text-center">
+                    <p class="font-mono font-600 text-2xl text-emerald-soft" id="donut-center">—</p>
+                    <p class="text-[10px] text-mut">matched</p>
+                  </div>
+                </div>
+              </div>
+              <div id="donut-legend" class="mt-3 space-y-1.5 text-[12px]"></div>
+            </div>
+          </div>
+
+          <div class="rounded-xl border border-line/70 bg-panel/50 p-5">
+            <h3 class="font-display font-600 text-[15px] mb-1">Top vendors by spend</h3>
+            <p class="text-[11px] text-mut mb-4">Reconciled ledger value</p>
+            <div class="h-56"><canvas id="c-vendors"></canvas></div>
+          </div>
+        </section>
+
+        <section id="sec-trends" class="sec space-y-4">
+          <div class="flex items-end justify-between">
+            <div>
+              <h2 class="font-display font-600 text-[18px] tracking-tight">Trends &amp; analysis</h2>
+              <p class="text-[12px] text-mut">Volume, distribution and vendor quality</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+            <div class="rounded-xl border border-line/70 bg-panel/50 p-5">
+              <div class="flex items-center justify-between mb-4">
+                <div>
+                  <h3 class="font-display font-600 text-[15px]">Volume vs match rate</h3>
+                  <p class="text-[11px] text-mut">Invoices processed against clean-match rate</p>
+                </div>
+                <div class="flex items-center gap-4 text-[11px]">
+                  <span class="inline-flex items-center gap-1.5 text-mut"><span class="h-2 w-2 rounded-sm bg-emerald"></span>Invoices</span>
+                  <span class="inline-flex items-center gap-1.5 text-mut"><span class="h-2 w-2 rounded-sm bg-warn"></span>Match %</span>
+                </div>
+              </div>
+              <div class="h-60"><canvas id="c-combo"></canvas></div>
+            </div>
+
+            <div class="rounded-xl border border-line/70 bg-panel/50 p-5">
+              <div class="flex items-center justify-between mb-4">
+                <div>
+                  <h3 class="font-display font-600 text-[15px]">Status by month</h3>
+                  <p class="text-[11px] text-mut">Line items grouped by outcome</p>
+                </div>
+                <div class="flex items-center gap-3 text-[11px]">
+                  <span class="inline-flex items-center gap-1.5 text-mut"><span class="h-2 w-2 rounded-sm bg-emerald"></span>Matched</span>
+                  <span class="inline-flex items-center gap-1.5 text-mut"><span class="h-2 w-2 rounded-sm bg-warn"></span>Variance</span>
+                  <span class="inline-flex items-center gap-1.5 text-mut"><span class="h-2 w-2 rounded-sm bg-bad"></span>Unmatched</span>
+                </div>
+              </div>
+              <div class="h-60"><canvas id="c-stack"></canvas></div>
+            </div>
+
+            <div class="rounded-xl border border-line/70 bg-panel/50 p-5">
+              <div class="flex items-center justify-between mb-4">
+                <div>
+                  <h3 class="font-display font-600 text-[15px]">Variance distribution</h3>
+                  <p class="text-[11px] text-mut">Variance against invoice size</p>
+                </div>
+                <div class="flex items-center gap-3 text-[11px]">
+                  <span class="inline-flex items-center gap-1.5 text-mut"><span class="h-2 w-2 rounded-full bg-emerald"></span>Matched</span>
+                  <span class="inline-flex items-center gap-1.5 text-mut"><span class="h-2 w-2 rounded-full bg-warn"></span>Variance</span>
+                  <span class="inline-flex items-center gap-1.5 text-mut"><span class="h-2 w-2 rounded-full bg-bad"></span>Unmatched</span>
+                </div>
+              </div>
+              <div class="h-60"><canvas id="c-scatter"></canvas></div>
+            </div>
+
+            <div class="rounded-xl border border-line/70 bg-panel/50 p-5">
+              <div class="flex items-center justify-between mb-4">
+                <div>
+                  <h3 class="font-display font-600 text-[15px]">Vendor scorecard</h3>
+                  <p class="text-[11px] text-mut">Top vendor vs portfolio average</p>
+                </div>
+                <div class="flex items-center gap-3 text-[11px]">
+                  <span class="inline-flex items-center gap-1.5 text-mut"><span class="h-2 w-2 rounded-sm bg-emerald"></span>Northwind</span>
+                  <span class="inline-flex items-center gap-1.5 text-mut"><span class="h-2 w-2 rounded-sm bg-warn"></span>Portfolio</span>
+                </div>
+              </div>
+              <div class="h-60"><canvas id="c-radar"></canvas></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="sec-payments" class="sec space-y-4">
+          <div>
+            <h2 class="font-display font-600 text-[18px] tracking-tight">Payments</h2>
+            <p class="text-[12px] text-mut">Ageing, status mix and cleared cash</p>
+          </div>
+
+          <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+            <div class="rounded-xl border border-line/70 bg-panel/50 p-5">
+              <h3 class="font-display font-600 text-[15px] mb-1">Outstanding by ageing</h3>
+              <p class="text-[11px] text-mut mb-4">Amount due per bucket</p>
+              <div class="h-56"><canvas id="c-pay"></canvas></div>
+            </div>
+            <div class="rounded-xl border border-line/70 bg-panel/50 p-5">
+              <h3 class="font-display font-600 text-[15px] mb-1">Payment status mix</h3>
+              <p class="text-[11px] text-mut mb-4">Share of invoices by state</p>
+              <div class="h-56 grid grid-cols-2 items-center">
+                <canvas id="c-polar"></canvas>
+                <div id="polar-legend" class="space-y-2 text-[12px]"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="rounded-xl border border-line/70 bg-panel/50 p-5">
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <h3 class="font-display font-600 text-[15px]">Cleared vs outstanding cash</h3>
+                <p class="text-[11px] text-mut">Stacked monthly settlement</p>
+              </div>
+              <div class="flex items-center gap-4 text-[11px]">
+                <span class="inline-flex items-center gap-1.5 text-mut"><span class="h-2 w-2 rounded-sm bg-emerald"></span>Cleared</span>
+                <span class="inline-flex items-center gap-1.5 text-mut"><span class="h-2 w-2 rounded-sm bg-warn"></span>Outstanding</span>
+              </div>
+            </div>
+            <div class="h-56"><canvas id="c-cash"></canvas></div>
+          </div>
+        </section>
+
+        <section id="sec-items" class="sec">
+          <div class="rounded-xl border border-line/70 bg-panel/50 overflow-hidden">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-5 border-b border-line/70">
+              <div>
+                <h3 class="font-display font-600 text-[15px]">Reconciliation line items</h3>
+                <p class="text-[11px] text-mut">Matched, variance and unmatched records</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <div class="relative">
+                  <svg viewBox="0 0 24 24" class="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-mut" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4" stroke-linecap="round"/></svg>
+                  <input id="tbl-search" placeholder="Search vendor or ref" class="w-full sm:w-56 h-9 rounded-lg bg-panel2 border border-line pl-9 pr-3 text-[12.5px] placeholder:text-mut focus:outline-none focus:border-emerald/50" />
+                </div>
+                <div class="flex rounded-lg border border-line overflow-hidden text-[12px]" id="tbl-filter">
+                  <button data-f="all" class="px-3 h-9 bg-emerald/12 text-emerald-soft font-500">All</button>
+                  <button data-f="Matched" class="px-3 h-9 text-mut hover:text-txt border-l border-line">Matched</button>
+                  <button data-f="Variance" class="px-3 h-9 text-mut hover:text-txt border-l border-line">Variance</button>
+                  <button data-f="Unmatched" class="px-3 h-9 text-mut hover:text-txt border-l border-line">Unmatched</button>
+                </div>
+              </div>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-[13px] min-w-[720px]">
+                <thead>
+                  <tr class="text-mut text-left border-b border-line/70">
+                    <th class="font-500 font-normal px-5 py-3">Reference</th>
+                    <th class="font-500 font-normal px-5 py-3">Vendor</th>
+                    <th class="font-500 font-normal px-5 py-3 text-right">Ledger</th>
+                    <th class="font-500 font-normal px-5 py-3 text-right">Vendor</th>
+                    <th class="font-500 font-normal px-5 py-3 text-right">Variance</th>
+                    <th class="font-500 font-normal px-5 py-3">Status</th>
+                  </tr>
+                </thead>
+                <tbody id="tbl-body"></tbody>
+              </table>
+            </div>
+            <div class="px-5 py-3 border-t border-line/70 text-[11px] text-mut" id="tbl-foot"></div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const money = n => "$" + Math.round(n).toLocaleString("en-US");
+const state = { raw: null, vendor: null };
+const charts = {};
+
+const rand = (min, max) => Math.round(min + Math.random() * (max - min));
+const vendors = ["Northwind Supply", "Apex Logistics", "Cedar & Co", "Vantage Media", "Ironline Parts", "Summit Freight", "Blue Harbor Ltd", "Meridian Tech", "Copper Ridge", "Halcyon Group"];
+const months = ["Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep"];
+
+const dataset = (() => {
+  const items = [];
+  for (let i = 0; i < 46; i++) {
+    const vendor = vendors[rand(0, vendors.length - 1)];
+    const ledger = rand(1200, 48000);
+    const roll = Math.random();
+    let vend, status, variance;
+    if (roll < 0.68) { vend = ledger; status = "Matched"; variance = 0; }
+    else if (roll < 0.9) { const d = rand(20, 900) * (Math.random() < 0.5 ? -1 : 1); vend = ledger + d; status = "Variance"; variance = vend - ledger; }
+    else { vend = 0; status = "Unmatched"; variance = -ledger; }
+    items.push({ ref: "INV-" + (10240 + i), vendor, ledger, vend, variance, status });
+  }
+  const ledgerByMonth = months.map(() => rand(180000, 340000));
+  const vendorByMonth = ledgerByMonth.map(v => v + rand(-14000, 16000));
+  const invoiceCounts = months.map(() => rand(30, 66));
+  const matchRatePct = months.map(() => rand(79, 96));
+  const statusByMonth = invoiceCounts.map((c, i) => {
+    const m = Math.round(c * matchRatePct[i] / 100);
+    const rest = c - m;
+    const v = Math.round(rest * 0.62);
+    return { matched: m, variance: v, unmatched: rest - v };
+  });
+  const cashCleared = months.map(() => rand(120, 260));
+  const cashOutstanding = months.map(() => rand(28, 108));
+  const paymentStatus = [rand(19, 30), rand(11, 18), rand(6, 13), rand(3, 9)];
+  const radarLabels = ["Match rate", "On-time pay", "Data quality", "Price accuracy", "Dispute-free"];
+  const radarTop = radarLabels.map(() => rand(82, 96));
+  const radarAvg = radarLabels.map(() => rand(70, 85));
+  return { items, ledgerByMonth, vendorByMonth, invoiceCounts, matchRatePct, statusByMonth, cashCleared, cashOutstanding, paymentStatus, radarLabels, radarTop, radarAvg };
+})();
+
+const totals = (() => {
+  const t = { ledger: 0, vendor: 0, matched: 0, variance: 0, unmatched: 0, absVar: 0 };
+  dataset.items.forEach(r => {
+    t.ledger += r.ledger; t.vendor += r.vend; t.absVar += Math.abs(r.variance);
+    if (r.status === "Matched") t.matched++;
+    else if (r.status === "Variance") t.variance++;
+    else t.unmatched++;
+  });
+  t.matchRate = (t.matched / dataset.items.length) * 100;
+  return t;
+})();
+
+function bindZone(zoneId, inputId, key, metaId, nameId) {
+  const zone = $("#" + zoneId), input = $("#" + inputId);
+  const apply = file => {
+    if (!file) return;
+    state[key] = file;
+    $("#" + nameId).textContent = file.name + "  ·  " + (file.size / 1024 < 1024 ? (file.size / 1024).toFixed(0) + " KB" : (file.size / 1048576).toFixed(1) + " MB");
+    $("#" + metaId).classList.remove("hidden");
+    refresh();
+  };
+  input.addEventListener("change", e => apply(e.target.files[0]));
+  ["dragenter", "dragover"].forEach(ev => zone.addEventListener(ev, e => { e.preventDefault(); zone.classList.add("drop-active"); }));
+  ["dragleave", "drop"].forEach(ev => zone.addEventListener(ev, e => { e.preventDefault(); zone.classList.remove("drop-active"); }));
+  zone.addEventListener("drop", e => apply(e.dataTransfer.files[0]));
+}
+
+$$("[data-clear]").forEach(btn => btn.addEventListener("click", e => {
+  e.preventDefault(); e.stopPropagation();
+  const key = btn.dataset.clear;
+  state[key] = null;
+  $("#file-" + key).value = "";
+  $("#meta-" + key).classList.add("hidden");
+  refresh();
+}));
+
+function refresh() {
+  const ready = state.raw && state.vendor;
+  $("#start").disabled = !ready;
+  $("#hint").textContent = ready ? "Ready to run — 92 rows detected across both files." : (state.raw || state.vendor ? "One more file to go." : "Both files are required to begin.");
+}
+
+bindZone("zone-raw", "file-raw", "raw", "meta-raw", "name-raw");
+bindZone("zone-vendor", "file-vendor", "vendor", "meta-vendor", "name-vendor");
+
+const steps = [
+  ["Parsing files", "Reading rows and normalizing columns", 18],
+  ["Matching references", "Aligning ledger entries to vendor lines", 46],
+  ["Scoring variances", "Flagging amount and date mismatches", 72],
+  ["Building outputs", "Compiling master, reconciliation and payments", 100]
+];
+
+$("#start").addEventListener("click", () => {
+  const overlay = $("#processing");
+  overlay.classList.remove("hidden");
+  const stepsWrap = $("#proc-steps");
+  stepsWrap.innerHTML = "";
+  let i = 0;
+  const tick = () => {
+    if (i >= steps.length) { setTimeout(reveal, 320); return; }
+    const [title, sub, pct] = steps[i];
+    $("#proc-title").textContent = title;
+    $("#proc-sub").textContent = sub;
+    $("#proc-bar").style.width = pct + "%";
+    const row = document.createElement("div");
+    row.className = "flex items-center gap-2 text-[12px] text-mut";
+    row.innerHTML = '<span class="h-4 w-4 rounded-full border border-emerald-soft/60 grid place-items-center text-emerald-soft">✓</span>' + title;
+    stepsWrap.appendChild(row);
+    i++;
+    setTimeout(tick, 620);
+  };
+  tick();
+});
+
+function reveal() {
+  $("#processing").classList.add("hidden");
+  $("#intake").classList.add("hidden");
+  const dash = $("#dashboard");
+  dash.classList.remove("hidden");
+  dash.classList.add("fade-up");
+  const now = new Date();
+  $("#run-meta").textContent = "Run " + now.toLocaleDateString("en-US", { day: "2-digit", month: "short", year: "numeric" }) + " · " + dataset.items.length + " records";
+  renderKpis();
+  renderTable(dataset.items);
+  buildCharts();
+  initScrollSpy();
+  window.scrollTo(0, 0);
+}
+
+function kpiCard(label, value, delta, positive) {
+  const color = positive ? "text-emerald-soft" : "text-bad";
+  const arrow = positive ? "M12 5v14m0-14l5 5m-5-5l-5 5" : "M12 19V5m0 14l5-5m-5 5l-5-5";
+  return `<div class="rounded-xl border border-line/70 bg-panel/50 p-5">
+    <p class="text-[12px] text-mut">${label}</p>
+    <p class="font-mono font-600 text-[26px] mt-2 tracking-tight">${value}</p>
+    <p class="text-[11.5px] mt-1 inline-flex items-center gap-1 ${color}">
+      <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2"><path d="${arrow}" stroke-linecap="round" stroke-linejoin="round"/></svg>${delta}
+    </p>
+  </div>`;
+}
+
+function renderKpis() {
+  $("#kpis").innerHTML = [
+    kpiCard("Records processed", dataset.items.length, "all sources parsed", true),
+    kpiCard("Ledger reconciled", money(totals.ledger), "+" + rand(3, 9) + "% vs last run", true),
+    kpiCard("Match rate", totals.matchRate.toFixed(1) + "%", totals.matched + " clean matches", true),
+    kpiCard("Open variance", money(totals.absVar), (totals.variance + totals.unmatched) + " items to review", false)
+  ].join("");
+}
+
+function badge(status) {
+  const map = {
+    Matched: "bg-emerald/12 text-emerald-soft border-emerald/25",
+    Variance: "bg-warn/12 text-warn border-warn/25",
+    Unmatched: "bg-bad/12 text-bad border-bad/25"
+  };
+  return `<span class="inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-[11px] font-500 ${map[status]}"><span class="h-1.5 w-1.5 rounded-full bg-current"></span>${status}</span>`;
+}
+
+function renderTable(rows) {
+  $("#tbl-body").innerHTML = rows.map(r => {
+    const vColor = r.variance === 0 ? "text-mut" : r.variance > 0 ? "text-warn" : "text-bad";
+    const vTxt = r.variance === 0 ? "—" : (r.variance > 0 ? "+" : "") + money(r.variance).replace("$-", "-$");
+    return `<tr class="border-b border-line/40 hover:bg-panel2/60 transition-colors">
+      <td class="px-5 py-3 font-mono text-[12px] text-mut">${r.ref}</td>
+      <td class="px-5 py-3">${r.vendor}</td>
+      <td class="px-5 py-3 text-right font-mono">${money(r.ledger)}</td>
+      <td class="px-5 py-3 text-right font-mono">${r.vend ? money(r.vend) : '<span class="text-mut">—</span>'}</td>
+      <td class="px-5 py-3 text-right font-mono ${vColor}">${vTxt}</td>
+      <td class="px-5 py-3">${badge(r.status)}</td>
+    </tr>`;
+  }).join("");
+  $("#tbl-foot").textContent = "Showing " + rows.length + " of " + dataset.items.length + " records";
+}
+
+let activeFilter = "all";
+function applyTable() {
+  const q = $("#tbl-search").value.trim().toLowerCase();
+  const rows = dataset.items.filter(r =>
+    (activeFilter === "all" || r.status === activeFilter) &&
+    (!q || r.vendor.toLowerCase().includes(q) || r.ref.toLowerCase().includes(q))
+  );
+  renderTable(rows);
+}
+$("#tbl-search").addEventListener("input", applyTable);
+$$("#tbl-filter button").forEach(b => b.addEventListener("click", () => {
+  activeFilter = b.dataset.f;
+  $$("#tbl-filter button").forEach(x => { x.className = x.className.replace(/bg-emerald\/12 text-emerald-soft font-500/, "text-mut hover:text-txt"); });
+  b.className = b.className.replace(/text-mut hover:text-txt/, "bg-emerald/12 text-emerald-soft font-500");
+  applyTable();
+}));
+
+function buildCharts() {
+  Chart.defaults.color = "#8A9A90";
+  Chart.defaults.font.family = "Inter, sans-serif";
+  Chart.defaults.font.size = 11;
+  const grid = "rgba(44,61,52,0.5)";
+
+  charts.trend = new Chart($("#c-trend"), {
+    type: "line",
+    data: { labels: months, datasets: [
+      { label: "Ledger", data: dataset.ledgerByMonth, borderColor: "#10B981", backgroundColor: "rgba(16,185,129,0.12)", fill: true, tension: 0.4, borderWidth: 2, pointRadius: 0, pointHoverRadius: 4 },
+      { label: "Vendor", data: dataset.vendorByMonth, borderColor: "#F5A524", backgroundColor: "transparent", fill: false, tension: 0.4, borderWidth: 2, borderDash: [5, 4], pointRadius: 0, pointHoverRadius: 4 }
+    ]},
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+      scales: { x: { grid: { display: false }, border: { color: grid } }, y: { grid: { color: grid }, border: { display: false }, ticks: { callback: v => "$" + (v / 1000) + "k" } } } }
+  });
+
+  const dv = [totals.matched, totals.variance, totals.unmatched];
+  charts.donut = new Chart($("#c-donut"), {
+    type: "doughnut",
+    data: { labels: ["Matched", "Variance", "Unmatched"], datasets: [{ data: dv, backgroundColor: ["#10B981", "#F5A524", "#F26D6D"], borderColor: "#0A0F0D", borderWidth: 3, hoverOffset: 4 }] },
+    options: { responsive: true, maintainAspectRatio: false, cutout: "72%", plugins: { legend: { display: false } } }
+  });
+  $("#donut-center").textContent = totals.matchRate.toFixed(0) + "%";
+  const legendMap = [["Matched", "#10B981", totals.matched], ["Variance", "#F5A524", totals.variance], ["Unmatched", "#F26D6D", totals.unmatched]];
+  $("#donut-legend").innerHTML = legendMap.map(([l, c, n]) => `<div class="flex items-center justify-between"><span class="inline-flex items-center gap-2 text-mut"><span class="h-2.5 w-2.5 rounded-sm" style="background:${c}"></span>${l}</span><span class="font-mono text-txt">${n}</span></div>`).join("");
+
+  const spend = {};
+  dataset.items.forEach(r => { spend[r.vendor] = (spend[r.vendor] || 0) + r.ledger; });
+  const top = Object.entries(spend).sort((a, b) => b[1] - a[1]).slice(0, 6);
+  charts.vendors = new Chart($("#c-vendors"), {
+    type: "bar",
+    data: { labels: top.map(t => t[0]), datasets: [{ data: top.map(t => t[1]), backgroundColor: "#10B981", hoverBackgroundColor: "#34D399", borderRadius: 5, barThickness: 16 }] },
+    options: { indexAxis: "y", responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+      scales: { x: { grid: { color: grid }, border: { display: false }, ticks: { callback: v => "$" + (v / 1000) + "k" } }, y: { grid: { display: false }, border: { display: false } } } }
+  });
+
+  charts.combo = new Chart($("#c-combo"), {
+    type: "bar",
+    data: { labels: months, datasets: [
+      { type: "bar", label: "Invoices", data: dataset.invoiceCounts, backgroundColor: "rgba(16,185,129,0.55)", hoverBackgroundColor: "#34D399", borderRadius: 4, barThickness: 18, yAxisID: "y", order: 2 },
+      { type: "line", label: "Match rate", data: dataset.matchRatePct, borderColor: "#F5A524", backgroundColor: "rgba(245,165,36,0.12)", fill: false, tension: 0.4, borderWidth: 2, pointRadius: 0, pointHoverRadius: 4, yAxisID: "y1", order: 1 }
+    ]},
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false }, border: { color: grid } },
+        y: { position: "left", grid: { color: grid }, border: { display: false }, beginAtZero: true },
+        y1: { position: "right", grid: { display: false }, border: { display: false }, min: 0, max: 100, ticks: { callback: v => v + "%" } }
+      } }
+  });
+
+  charts.stack = new Chart($("#c-stack"), {
+    type: "bar",
+    data: { labels: months, datasets: [
+      { label: "Matched", data: dataset.statusByMonth.map(s => s.matched), backgroundColor: "#10B981", borderRadius: 3, stack: "s" },
+      { label: "Variance", data: dataset.statusByMonth.map(s => s.variance), backgroundColor: "#F5A524", borderRadius: 3, stack: "s" },
+      { label: "Unmatched", data: dataset.statusByMonth.map(s => s.unmatched), backgroundColor: "#F26D6D", borderRadius: 3, stack: "s" }
+    ]},
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+      scales: { x: { stacked: true, grid: { display: false }, border: { color: grid } }, y: { stacked: true, grid: { color: grid }, border: { display: false } } } }
+  });
+
+  const pts = st => dataset.items.filter(r => r.status === st).map(r => ({ x: r.ledger, y: r.status === "Unmatched" ? -r.ledger : r.variance }));
+  charts.scatter = new Chart($("#c-scatter"), {
+    type: "scatter",
+    data: { datasets: [
+      { label: "Matched", data: pts("Matched"), backgroundColor: "rgba(16,185,129,0.65)", pointRadius: 4, pointHoverRadius: 6 },
+      { label: "Variance", data: pts("Variance"), backgroundColor: "rgba(245,165,36,0.85)", pointRadius: 4, pointHoverRadius: 6 },
+      { label: "Unmatched", data: pts("Unmatched"), backgroundColor: "rgba(242,109,109,0.85)", pointRadius: 4, pointHoverRadius: 6 }
+    ]},
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: grid }, border: { color: grid }, ticks: { callback: v => "$" + (v / 1000) + "k" }, title: { display: true, text: "Invoice size", color: "#8A9A90", font: { size: 10 } } },
+        y: { grid: { color: grid }, border: { display: false }, ticks: { callback: v => "$" + (v / 1000) + "k" }, title: { display: true, text: "Variance", color: "#8A9A90", font: { size: 10 } } }
+      } }
+  });
+
+  charts.radar = new Chart($("#c-radar"), {
+    type: "radar",
+    data: { labels: dataset.radarLabels, datasets: [
+      { label: "Northwind Supply", data: dataset.radarTop, borderColor: "#10B981", backgroundColor: "rgba(16,185,129,0.18)", borderWidth: 2, pointBackgroundColor: "#10B981", pointRadius: 3 },
+      { label: "Portfolio avg", data: dataset.radarAvg, borderColor: "#F5A524", backgroundColor: "rgba(245,165,36,0.10)", borderWidth: 2, pointBackgroundColor: "#F5A524", pointRadius: 3 }
+    ]},
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+      scales: { r: { min: 0, max: 100, grid: { color: grid }, angleLines: { color: grid }, pointLabels: { color: "#8A9A90", font: { size: 10 } }, ticks: { display: false, stepSize: 20, backdropColor: "transparent" } } } }
+  });
+
+  charts.pay = new Chart($("#c-pay"), {
+    type: "bar",
+    data: { labels: ["Current", "1–30d", "31–60d", "61–90d", "90d+"], datasets: [{ data: [rand(120, 220), rand(70, 140), rand(40, 90), rand(15, 55), rand(8, 30)], backgroundColor: ["#10B981", "#2DBB8A", "#F5A524", "#EF8B4B", "#F26D6D"], borderRadius: 5, barThickness: 34 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+      scales: { x: { grid: { display: false }, border: { color: grid } }, y: { grid: { color: grid }, border: { display: false }, ticks: { callback: v => "$" + v + "k" } } } }
+  });
+
+  const payLabels = ["Paid", "Scheduled", "Pending", "Overdue"];
+  const payColors = ["#10B981", "#2DBB8A", "#F5A524", "#F26D6D"];
+  charts.polar = new Chart($("#c-polar"), {
+    type: "polarArea",
+    data: { labels: payLabels, datasets: [{ data: dataset.paymentStatus, backgroundColor: payColors.map(c => c + "cc"), borderColor: "#0A0F0D", borderWidth: 2 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+      scales: { r: { grid: { color: grid }, angleLines: { color: grid }, ticks: { display: false, backdropColor: "transparent" } } } }
+  });
+  const payTotal = dataset.paymentStatus.reduce((a, b) => a + b, 0);
+  $("#polar-legend").innerHTML = payLabels.map((l, i) => `<div class="flex items-center justify-between gap-3"><span class="inline-flex items-center gap-2 text-mut"><span class="h-2.5 w-2.5 rounded-sm" style="background:${payColors[i]}"></span>${l}</span><span class="font-mono text-txt">${Math.round(dataset.paymentStatus[i] / payTotal * 100)}%</span></div>`).join("");
+
+  charts.cash = new Chart($("#c-cash"), {
+    type: "line",
+    data: { labels: months, datasets: [
+      { label: "Cleared", data: dataset.cashCleared, borderColor: "#10B981", backgroundColor: "rgba(16,185,129,0.22)", fill: true, tension: 0.4, borderWidth: 2, pointRadius: 0, pointHoverRadius: 4 },
+      { label: "Outstanding", data: dataset.cashOutstanding, borderColor: "#F5A524", backgroundColor: "rgba(245,165,36,0.16)", fill: true, tension: 0.4, borderWidth: 2, pointRadius: 0, pointHoverRadius: 4 }
+    ]},
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+      scales: { x: { grid: { display: false }, border: { color: grid } }, y: { stacked: true, grid: { color: grid }, border: { display: false }, ticks: { callback: v => "$" + v + "k" } } } }
+  });
+}
+
+function setActiveNav(id) {
+  $$("#side-nav .nav-link").forEach(a => {
+    const on = a.dataset.target === id;
+    a.classList.toggle("bg-emerald/12", on);
+    a.classList.toggle("text-emerald-soft", on);
+    a.classList.toggle("font-500", on);
+    a.classList.toggle("text-mut", !on);
+  });
+}
+
+let spyReady = false;
+function initScrollSpy() {
+  $$("#side-nav .nav-link").forEach(a => a.addEventListener("click", e => {
+    e.preventDefault();
+    const el = document.getElementById(a.dataset.target);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }));
+  setActiveNav("sec-overview");
+  if (spyReady) return;
+  spyReady = true;
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(en => { if (en.isIntersecting) setActiveNav(en.target.id); });
+  }, { rootMargin: "-25% 0px -65% 0px", threshold: 0 });
+  ["sec-overview", "sec-trends", "sec-payments", "sec-items"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) obs.observe(el);
+  });
+}
+
+function toCsv(rows) {
+  return rows.map(r => r.map(c => {
+    const s = String(c ?? "");
+    return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  }).join(",")).join("\n");
+}
+
+function download(name, rows) {
+  const blob = new Blob([toCsv(rows)], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+}
+
+const builders = {
+  master: () => [["Reference", "Vendor", "Ledger Amount", "Vendor Amount", "Variance", "Status"], ...dataset.items.map(r => [r.ref, r.vendor, r.ledger, r.vend, r.variance, r.status])],
+  recon: () => [["Reference", "Vendor", "Ledger", "Vendor", "Variance", "Match Type", "Action"], ...dataset.items.map(r => [r.ref, r.vendor, r.ledger, r.vend, r.variance, r.status, r.status === "Matched" ? "None" : "Review"])],
+  payments: () => [["Reference", "Vendor", "Amount Due", "Status", "Ageing Bucket"], ...dataset.items.map((r, i) => [r.ref, r.vendor, r.status === "Unmatched" ? r.ledger : r.vend, ["Paid", "Scheduled", "Pending", "Overdue"][i % 4], ["Current", "1-30d", "31-60d", "61-90d", "90d+"][i % 5]])]
+};
+
+$$("[data-dl]").forEach(btn => btn.addEventListener("click", () => {
+  const key = btn.dataset.dl;
+  const names = { master: "master_data.csv", recon: "vendor_reconciliation.csv", payments: "payments.csv" };
+  download(names[key], builders[key]());
+}));
+
+$("#restart").addEventListener("click", () => {
+  Object.values(charts).forEach(c => c && c.destroy());
+  $("#dashboard").classList.add("hidden");
+  $("#intake").classList.remove("hidden");
+  state.raw = null; state.vendor = null;
+  $("#file-raw").value = ""; $("#file-vendor").value = "";
+  $("#meta-raw").classList.add("hidden"); $("#meta-vendor").classList.add("hidden");
+  $("#proc-bar").style.width = "0%";
+  refresh();
+  window.scrollTo(0, 0);
+});
+</script>
+</body>
+</html>

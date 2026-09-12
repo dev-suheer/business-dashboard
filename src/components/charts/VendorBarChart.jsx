@@ -1,0 +1,34 @@
+import { Bar } from 'react-chartjs-2'
+import { GRID } from '../../constants/theme'
+import { topVendorsBySpend } from '../../data/generateDataset'
+import { BASE_OPTIONS, dollarsK } from './chartSetup'
+
+const options = {
+  ...BASE_OPTIONS,
+  indexAxis: 'y',
+  scales: {
+    x: {
+      grid: { color: GRID },
+      border: { display: false },
+      ticks: { callback: dollarsK },
+    },
+    y: { grid: { display: false }, border: { display: false } },
+  },
+}
+
+export default function VendorBarChart() {
+  const data = {
+    labels: topVendorsBySpend.map((t) => t[0]),
+    datasets: [
+      {
+        data: topVendorsBySpend.map((t) => t[1]),
+        backgroundColor: '#10B981',
+        hoverBackgroundColor: '#34D399',
+        borderRadius: 5,
+        barThickness: 16,
+      },
+    ],
+  }
+
+  return <Bar data={data} options={options} />
+}

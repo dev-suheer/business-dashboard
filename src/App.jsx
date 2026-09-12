@@ -1,13 +1,50 @@
-function App() {
+import { useCallback, useState } from 'react'
+import './components/charts/chartSetup'
+import DashboardScreen from './components/dashboard/DashboardScreen'
+import IntakeScreen from './components/intake/IntakeScreen'
+import ProcessingOverlay from './components/processing/ProcessingOverlay'
+import { dataset } from './data/generateDataset'
+import { useFileIntake } from './hooks/useFileIntake'
+import { formatRunDate } from './utils/format'
+
+export default function App() {
+  const [screen, setScreen] = useState('intake')
+  const [processing, setProcessing] = useState(false)
+  const [runMeta, setRunMeta] = useState('')
+  const { files, ready, hint, selectFile, clearFile, reset } = useFileIntake()
+
+  const reveal = useCallback(() => {
+    setProcessing(false)
+    setScreen('dashboard')
+    setRunMeta(
+      'Run ' + formatRunDate(new Date()) + ' · ' + dataset.items.length + ' records',
+    )
+    window.scrollTo(0, 0)
+  }, [])
+
+  const restart = useCallback(() => {
+    setScreen('intake')
+    setProcessing(false)
+    reset()
+    window.scrollTo(0, 0)
+  }, [reset])
+
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-slate-50 text-slate-900">
-      <h1 className="text-4xl font-bold tracking-tight">Business Dashboard</h1>
-      <p className="text-slate-600">React + Vite + Tailwind CSS is ready.</p>
-      <button className="rounded-md bg-indigo-600 px-4 py-2 text-white font-medium hover:bg-indigo-700 transition-colors">
-        Get started
-      </button>
-    </div>
+    <>
+      {screen === 'intake' && (
+        <IntakeScreen
+          files={files}
+          ready={ready}
+          hint={hint}
+          onSelect={selectFile}
+          onClear={clearFile}
+          onStart={() => setProcessing(true)}
+        />
+      )}
+
+      {screen === 'dashboard' && <DashboardScreen runMeta={runMeta} onRestart={restart} />}
+
+      <ProcessingOverlay active={processing} onComplete={reveal} />
+    </>
   )
 }
-
-export default App
