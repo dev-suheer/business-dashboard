@@ -1,7 +1,30 @@
+import { useEffect, useState } from 'react'
+import { healthCheck } from '../../api/client'
 import Icon from '../common/Icon'
 import Logo from '../common/Logo'
 
-export default function IntakeHeader({ onSignOut }) {
+const STATUS = {
+  checking: { dot: 'bg-mut', label: 'Checking engine…' },
+  up: { dot: 'bg-emerald-soft', label: 'Engine ready' },
+  down: { dot: 'bg-bad', label: 'Engine unreachable' },
+}
+
+export default function IntakeHeader({ username, onSignOut }) {
+  /* Real liveness from the API's health-check probe, not a static label. */
+  const [health, setHealth] = useState('checking')
+
+  useEffect(() => {
+    let cancelled = false
+    healthCheck().then((ok) => {
+      if (!cancelled) setHealth(ok ? 'up' : 'down')
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const status = STATUS[health]
+
   return (
     <header className="flex items-center justify-between px-6 md:px-10 h-16 border-b border-line/70">
       <div className="flex items-center gap-3">
@@ -12,10 +35,19 @@ export default function IntakeHeader({ onSignOut }) {
         </div>
       </div>
       <div className="flex items-center gap-4">
-        <div className="hidden sm:flex items-center gap-2 text-[12px] text-mut">
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-soft" />
-          Engine ready
+        <div
+          className={`hidden sm:flex items-center gap-2 text-[12px] ${
+            health === 'down' ? 'text-bad' : 'text-mut'
+          }`}
+        >
+          <span className={`h-1.5 w-1.5 rounded-full ${status.dot}`} />
+          {status.label}
         </div>
+        {username && (
+          <span className="hidden md:inline text-[12px] text-mut">
+            Signed in as <span className="text-txt">{username}</span>
+          </span>
+        )}
         <button
           type="button"
           onClick={onSignOut}

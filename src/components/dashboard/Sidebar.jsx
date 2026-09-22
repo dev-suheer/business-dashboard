@@ -41,6 +41,15 @@ export function RestartButton({ onRestart }) {
   )
 }
 
+export function SignedInAs({ username }) {
+  if (!username) return null
+  return (
+    <p className="px-1 text-[11.5px] text-mut truncate">
+      Signed in as <span className="text-txt">{username}</span>
+    </p>
+  )
+}
+
 export function SignOutButton({ onSignOut }) {
   return (
     <button
@@ -63,13 +72,14 @@ export function SidebarBrand() {
   )
 }
 
-export default function Sidebar({ activeId, onNavigate, onRestart, onSignOut }) {
+export default function Sidebar({ activeId, username, onNavigate, onRestart, onSignOut }) {
   return (
     <aside className="hidden lg:flex flex-col w-60 shrink-0 border-r border-line/70 min-h-screen sticky top-0 h-screen">
       <SidebarBrand />
       <NavLinks activeId={activeId} onNavigate={onNavigate} />
       <div className="mt-auto p-3 shrink-0 space-y-2">
         <RestartButton onRestart={onRestart} />
+        <SignedInAs username={username} />
         <SignOutButton onSignOut={onSignOut} />
       </div>
     </aside>

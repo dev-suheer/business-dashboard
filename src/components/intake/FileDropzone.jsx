@@ -5,9 +5,20 @@ import { formatFileDetail } from '../../utils/format'
 import { validateFile } from '../../utils/validateFile'
 import Icon from '../common/Icon'
 
-export default function FileDropzone({ title, caption, file, onSelect, onClear }) {
+export default function FileDropzone({
+  title,
+  caption,
+  file,
+  onSelect,
+  onClear,
+  action,
+  serverError = null,
+}) {
   const inputRef = useRef(null)
-  const [error, setError] = useState(null)
+  const [localError, setError] = useState(null)
+  /* The zone's own validation wins; otherwise show the server's message for this field
+     verbatim (e.g. the wrong workbook went into it). */
+  const error = localError ?? serverError
 
   /* Blanking the native input matters after a rejection too — without it, re-picking the
      same file fires no change event and the zone looks stuck. */
@@ -63,7 +74,9 @@ export default function FileDropzone({ title, caption, file, onSelect, onClear }
     <div>
       <div className="flex items-center justify-between mb-2">
         <span className="text-[13px] xl:text-[14px] font-500 text-txt">{title}</span>
-        <span className="text-[11px] text-mut">{caption}</span>
+        {/* An action (e.g. "Use portal file") takes the caption's place so every zone keeps
+            the same header height. */}
+        {action ?? <span className="text-[11px] text-mut">{caption}</span>}
       </div>
 
       <label

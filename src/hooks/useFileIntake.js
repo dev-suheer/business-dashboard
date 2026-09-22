@@ -1,13 +1,12 @@
 import { useCallback, useState } from 'react'
 
-const HINTS = {
-  ready: 'Ready to run — 92 rows detected across both files.',
-  partial: 'One more file to go.',
-  empty: 'Both files are required to begin.',
-}
+/* One slot per required API field. The same File may sit in more than one slot — portal and promo are usually two tabs
+   of one workbook, and the server picks the right tab for each field. */
+const EMPTY = { portal: null, vendor: null, promo: null }
+const REQUIRED = ['portal', 'vendor', 'promo']
 
 export function useFileIntake() {
-  const [files, setFiles] = useState({ raw: null, vendor: null })
+  const [files, setFiles] = useState(EMPTY)
 
   const selectFile = useCallback((key, file) => {
     if (!file) return
@@ -18,10 +17,15 @@ export function useFileIntake() {
     setFiles((prev) => ({ ...prev, [key]: null }))
   }, [])
 
-  const reset = useCallback(() => setFiles({ raw: null, vendor: null }), [])
+  const reset = useCallback(() => setFiles(EMPTY), [])
 
-  const ready = Boolean(files.raw && files.vendor)
-  const hint = ready ? HINTS.ready : files.raw || files.vendor ? HINTS.partial : HINTS.empty
+  const missing = REQUIRED.filter((key) => !files[key]).length
+  const ready = missing === 0
+  const hint = ready
+    ? 'Ready to run — all three files selected.'
+    : missing === REQUIRED.length
+      ? 'Portal export, vendor statement and discount sheet are required.'
+      : `${missing} more required file${missing > 1 ? 's' : ''} to go.`
 
   return { files, ready, hint, selectFile, clearFile, reset }
 }

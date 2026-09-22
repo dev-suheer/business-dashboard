@@ -1,12 +1,20 @@
 import { useEffect } from 'react'
 import Icon from '../common/Icon'
 import Logo from '../common/Logo'
-import { NavLinks, RestartButton, SignOutButton } from './Sidebar'
+import { NavLinks, RestartButton, SignedInAs, SignOutButton } from './Sidebar'
 
 /* Sub-lg navigation. The reference hid the sidebar below 1024px with no replacement, so
    there was no way to jump between sections or start a new run on a phone or tablet.
    Same links, same tokens, same active-state styling as the desktop sidebar. */
-export default function MobileNav({ open, activeId, onNavigate, onRestart, onSignOut, onClose }) {
+export default function MobileNav({
+  open,
+  activeId,
+  username,
+  onNavigate,
+  onRestart,
+  onSignOut,
+  onClose,
+}) {
   useEffect(() => {
     if (!open) return undefined
     const previous = document.body.style.overflow
@@ -57,6 +65,7 @@ export default function MobileNav({ open, activeId, onNavigate, onRestart, onSig
 
         <div className="mt-auto p-3 shrink-0 space-y-2">
           <RestartButton onRestart={onRestart} />
+          <SignedInAs username={username} />
           <SignOutButton onSignOut={onSignOut} />
         </div>
       </aside>

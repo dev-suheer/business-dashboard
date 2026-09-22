@@ -1,77 +1,91 @@
-import { useCallback, useState } from 'react'
-import { AUTH_VIEWS, DEMO_EMAIL, DEMO_PASSWORD } from '../constants/auth'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { currentUser, login, logout } from '../api/client'
 
-/* Client-side only: state lives in memory, so a page reload signs the user back out.
-   Every action returns an error string or null so screens can render their own message
-   without reaching into the hook's state. */
+/* The cookie lives 60 minutes with no renewal; warn 5 minutes before it runs out. */
+const WARN_AFTER_MS = 55 * 60 * 1000
+
+/* Session state backed by the API's HttpOnly cookie. JavaScript cannot read the cookie,
+   so `/login/me` on mount is the only way to know whether a session is still alive.
+   signIn returns an error string or null so the screen can render its own message. */
 export function useAuth() {
-  const [authed, setAuthed] = useState(false)
-  const [view, setView] = useState(AUTH_VIEWS.login)
-  const [account, setAccount] = useState({ email: DEMO_EMAIL, password: DEMO_PASSWORD })
-  const [pendingEmail, setPendingEmail] = useState('')
+  const [checking, setChecking] = useState(true)
+  const [username, setUsername] = useState(null)
   const [notice, setNotice] = useState(null)
+  const [expiringSoon, setExpiringSoon] = useState(false)
+  const warnTimer = useRef(null)
+
+  const clearWarning = useCallback(() => {
+    clearTimeout(warnTimer.current)
+    warnTimer.current = null
+    setExpiringSoon(false)
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    currentUser()
+      .then((user) => {
+        if (!cancelled) setUsername(user?.username ?? null)
+      })
+      .catch(() => {
+        if (!cancelled) setUsername(null)
+      })
+      .finally(() => {
+        if (!cancelled) setChecking(false)
+      })
+    return () => {
+      cancelled = true
+      clearTimeout(warnTimer.current)
+    }
+  }, [])
 
   const signIn = useCallback(
-    (email, password) => {
-      const matches =
-        email.trim().toLowerCase() === account.email && password === account.password
-      if (!matches) return 'Incorrect email or password.'
-      setNotice(null)
-      setAuthed(true)
-      return null
+    async (name, password) => {
+      try {
+        const user = await login(name.trim(), password)
+        setNotice(null)
+        setUsername(user.username)
+        /* Only a fresh login has a known start time; a session restored via /me does not. */
+        clearWarning()
+        warnTimer.current = setTimeout(() => setExpiringSoon(true), WARN_AFTER_MS)
+        return null
+      } catch (err) {
+        return err.message || 'Login failed'
+      }
     },
-    [account],
+    [clearWarning],
   )
 
-  const requestCode = useCallback(
-    (email) => {
-      const normalized = email.trim().toLowerCase()
-      if (normalized !== account.email) return 'No account found for that email address.'
-      setPendingEmail(normalized)
-      setNotice(null)
-      setView(AUTH_VIEWS.otp)
-      return null
-    },
-    [account],
-  )
-
-  /* No code to verify against — the screen only gates on all six boxes being filled. */
-  const verifyCode = useCallback(() => {
-    setView(AUTH_VIEWS.reset)
-    return null
-  }, [])
-
-  const resetPassword = useCallback((password) => {
-    /* Updates the in-memory account, so the new password is what signs you in next. */
-    setAccount((prev) => ({ ...prev, password }))
-    setPendingEmail('')
-    setNotice('Password updated. Sign in with your new password.')
-    setView(AUTH_VIEWS.login)
-    return null
-  }, [])
-
-  const goTo = useCallback((next) => {
+  /* Logout is unauthenticated on the server, so it succeeds even on an expired session.
+     Client state is cleared regardless of the outcome. */
+  const signOut = useCallback(async () => {
+    try {
+      await logout()
+    } catch {
+      /* nothing to recover — the local session is dropped either way */
+    }
+    clearWarning()
     setNotice(null)
-    setView(next)
-  }, [])
+    setUsername(null)
+  }, [clearWarning])
 
-  const signOut = useCallback(() => {
-    setAuthed(false)
-    setPendingEmail('')
-    setNotice(null)
-    setView(AUTH_VIEWS.login)
-  }, [])
+  /* Called by the API client on any 401. */
+  const expire = useCallback(() => {
+    clearWarning()
+    setNotice('Your session has expired. Please log in again.')
+    setUsername(null)
+  }, [clearWarning])
+
+  const dismissWarning = useCallback(() => setExpiringSoon(false), [])
 
   return {
-    authed,
-    view,
-    pendingEmail,
+    checking,
+    authed: Boolean(username),
+    username,
     notice,
+    expiringSoon,
+    dismissWarning,
     signIn,
-    requestCode,
-    verifyCode,
-    resetPassword,
-    goTo,
     signOut,
+    expire,
   }
 }

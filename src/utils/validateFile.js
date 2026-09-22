@@ -1,4 +1,4 @@
-import { ACCEPTED_EXTENSIONS, ACCEPTED_LABEL } from '../constants/uploads'
+import { ACCEPTED_EXTENSIONS, ACCEPTED_LABEL, MAX_FILE_BYTES } from '../constants/uploads'
 import { fileExtension } from './format'
 
 /* Returns an error message, or null when the file is acceptable.
@@ -12,5 +12,6 @@ export function validateFile(file) {
     return `Unsupported file type — ${ACCEPTED_LABEL} only.`
   }
   if (file.size === 0) return 'That file is empty.'
+  if (file.size > MAX_FILE_BYTES) return 'That file is over the 200 MB upload limit.'
   return null
 }

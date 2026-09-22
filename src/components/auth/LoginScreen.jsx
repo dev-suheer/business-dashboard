@@ -4,18 +4,26 @@ import AuthLayout from './AuthLayout'
 import AuthNotice from './AuthNotice'
 import AuthSubmit from './AuthSubmit'
 
-export default function LoginScreen({ notice, onSignIn, onForgot }) {
-  const [email, setEmail] = useState('')
+export default function LoginScreen({ notice, onSignIn }) {
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState(null)
+  const [pending, setPending] = useState(false)
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault()
-    if (!email.trim() || !password) {
-      setError('Enter your email and password.')
+    if (pending) return
+    if (!username.trim() || !password) {
+      setError('Enter your username and password.')
       return
     }
-    setError(onSignIn(email, password))
+    setPending(true)
+    const problem = await onSignIn(username, password)
+    /* On success this screen unmounts, so only touch state on failure. */
+    if (problem) {
+      setError(problem)
+      setPending(false)
+    }
   }
 
   return (
@@ -28,12 +36,12 @@ export default function LoginScreen({ notice, onSignIn, onForgot }) {
         )}
 
         <AuthField
-          id="email"
-          label="Email address"
-          type="email"
-          value={email}
-          onChange={setEmail}
-          placeholder="you@company.com"
+          id="username"
+          label="Username"
+          type="text"
+          value={username}
+          onChange={setUsername}
+          placeholder="Enter your username"
           autoComplete="username"
           invalid={Boolean(error)}
         />
@@ -47,19 +55,10 @@ export default function LoginScreen({ notice, onSignIn, onForgot }) {
           placeholder="Enter your password"
           autoComplete="current-password"
           invalid={Boolean(error)}
-          action={
-            <button
-              type="button"
-              onClick={onForgot}
-              className="text-[11.5px] text-emerald-soft hover:text-emerald transition-colors"
-            >
-              Forgot password?
-            </button>
-          }
         />
 
         <div className="pt-1">
-          <AuthSubmit>Sign in</AuthSubmit>
+          <AuthSubmit disabled={pending}>{pending ? 'Signing in…' : 'Sign in'}</AuthSubmit>
         </div>
       </form>
     </AuthLayout>
