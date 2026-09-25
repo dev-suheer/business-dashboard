@@ -1,8 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { reconcile, SessionExpiredError, setSessionExpiredHandler } from './api/client'
+import {
+  reconcile,
+  reconcileTravel,
+  SessionExpiredError,
+  setSessionExpiredHandler,
+} from './api/client'
 import AuthFlow from './components/auth/AuthFlow'
 import './components/charts/chartSetup'
 import DashboardScreen from './components/dashboard/DashboardScreen'
+import TravelDashboardScreen from './components/dashboard/TravelDashboardScreen'
 import IntakeScreen from './components/intake/IntakeScreen'
 import ProcessingOverlay from './components/processing/ProcessingOverlay'
 import { useAuth } from './hooks/useAuth'
@@ -11,12 +17,15 @@ import { useFileIntake } from './hooks/useFileIntake'
 export default function App() {
   const auth = useAuth()
   const [screen, setScreen] = useState('intake')
+  /* The two categories have different endpoints and different result shapes, so the
+     category decides both the request and the dashboard (guide §12.9). */
+  const [category, setCategory] = useState('eshop')
   const [processing, setProcessing] = useState(false)
   /* The API persists nothing — this response is the only copy of the result. */
   const [result, setResult] = useState(null)
   const [runError, setRunError] = useState(null)
   const controllerRef = useRef(null)
-  const { files, ready, hint, selectFile, clearFile, reset } = useFileIntake()
+  const { files, ready, hint, selectFile, clearFile, reset } = useFileIntake(category)
 
   /* Any 401 routes back to login. Selected files are deliberately kept so the user can
      sign in again and resubmit without re-picking them. */
@@ -38,7 +47,8 @@ export default function App() {
     setRunError(null)
     setProcessing(true)
     try {
-      const data = await reconcile(files, controller.signal)
+      const run = category === 'travel' ? reconcileTravel : reconcile
+      const data = await run(files, controller.signal)
       setResult(data)
       setScreen('dashboard')
       window.scrollTo(0, 0)
@@ -51,9 +61,15 @@ export default function App() {
       if (controllerRef.current === controller) controllerRef.current = null
       setProcessing(false)
     }
-  }, [files, processing])
+  }, [category, files, processing])
 
   const cancel = useCallback(() => controllerRef.current?.abort(), [])
+
+  /* Each category keeps its own picked files; only the run error is category-specific. */
+  const switchCategory = useCallback((next) => {
+    setCategory(next)
+    setRunError(null)
+  }, [])
 
   /* A field's server error no longer applies once that file changes. */
   const clearFieldError = useCallback((key) => {
@@ -129,6 +145,8 @@ export default function App() {
 
       {screen === 'intake' && (
         <IntakeScreen
+          category={category}
+          onCategoryChange={switchCategory}
           files={files}
           ready={ready}
           hint={hint}
@@ -142,8 +160,18 @@ export default function App() {
         />
       )}
 
-      {screen === 'dashboard' && result && (
+      {screen === 'dashboard' && result && category === 'eshop' && (
         <DashboardScreen
+          result={result}
+          files={files}
+          username={auth.username}
+          onRestart={restart}
+          onSignOut={signOut}
+        />
+      )}
+
+      {screen === 'dashboard' && result && category === 'travel' && (
+        <TravelDashboardScreen
           result={result}
           files={files}
           username={auth.username}

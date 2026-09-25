@@ -1,11 +1,10 @@
-import { NAV_ITEMS } from '../../constants/navItems'
 import Icon from '../common/Icon'
 import Logo from '../common/Logo'
 
-export function NavLinks({ activeId, onNavigate }) {
+export function NavLinks({ items, activeId, onNavigate }) {
   return (
     <nav className="p-3 space-y-1 text-[13px]">
-      {NAV_ITEMS.map((item) => {
+      {items.map((item) => {
         const on = item.id === activeId
         return (
           <a
@@ -72,11 +71,11 @@ export function SidebarBrand() {
   )
 }
 
-export default function Sidebar({ activeId, username, onNavigate, onRestart, onSignOut }) {
+export default function Sidebar({ items, activeId, username, onNavigate, onRestart, onSignOut }) {
   return (
     <aside className="hidden lg:flex flex-col w-60 shrink-0 border-r border-line/70 min-h-screen sticky top-0 h-screen">
       <SidebarBrand />
-      <NavLinks activeId={activeId} onNavigate={onNavigate} />
+      <NavLinks items={items} activeId={activeId} onNavigate={onNavigate} />
       <div className="mt-auto p-3 shrink-0 space-y-2">
         <RestartButton onRestart={onRestart} />
         <SignedInAs username={username} />

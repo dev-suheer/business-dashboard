@@ -3,7 +3,8 @@ const WARN = 'bg-warn/12 text-warn border-warn/25'
 const BAD = 'bg-bad/12 text-bad border-bad/25'
 const MUTED = 'bg-panel2 text-mut border-line2'
 
-/* Covers OrderStatus, VarianceClass and MatchState values. Enum values are compared
+/* Covers eShop's OrderStatus, VarianceClass and MatchState plus travel's vertical,
+   locality, match state, refund and wallet-check vocabularies. Enum values are compared
    literally (OrderStatus is human-cased, the rest snake_case); anything unknown falls
    back to a muted pill. */
 const STYLES = {
@@ -21,6 +22,19 @@ const STYLES = {
   later_period: MUTED,
   ambiguous: WARN,
   Excluded: MUTED,
+  /* travel: vertical, locality, match state, refund and wallet check states */
+  hotel: MUTED,
+  flight: MUTED,
+  local: MUTED,
+  international: WARN,
+  portal_only: BAD,
+  vendor_only: BAD,
+  none: MUTED,
+  full: WARN,
+  partial: WARN,
+  amount_mismatch: BAD,
+  out_of_window: MUTED,
+  missing: BAD,
 }
 
 export default function StatusBadge({ status, label }) {

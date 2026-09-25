@@ -22,11 +22,11 @@ export class ApiError extends Error {
   }
 }
 
-const FIELDS = ['portal', 'vendor', 'promo']
+const FIELDS = ['portal', 'vendor', 'promo', 'wallet', 'settlements']
 
 function fieldOf(detail) {
   if (typeof detail === 'string') {
-    return /'(portal|vendor|promo)'/.exec(detail)?.[1] ?? null
+    return /'(portal|vendor|promo|wallet|settlements)'/.exec(detail)?.[1] ?? null
   }
   if (Array.isArray(detail)) {
     for (const e of detail) {
@@ -135,21 +135,31 @@ export async function healthCheck() {
 
 // ---------------------------------------------------------------- reconcile
 
-/* Unused optional fields are omitted entirely rather than sent empty. */
-function buildForm(o) {
+/* The two categories post different fields to different endpoints; unused optional
+   fields are omitted entirely rather than sent empty. */
+const FORM_FIELDS = {
+  eshop: {
+    required: ['portal', 'vendor', 'promo'],
+    optional: [
+      'settlements',
+      'category',
+      'period_start',
+      'period_end',
+      'standard_rate',
+      'promo_rate',
+      'promo_cutoff',
+    ],
+  },
+  travel: {
+    required: ['portal', 'vendor'],
+    optional: ['wallet', 'period_start', 'period_end', 'hotel_rate', 'flight_rate', 'vat_rate'],
+  },
+}
+
+function buildForm(o, category = 'eshop') {
+  const { required, optional } = FORM_FIELDS[category]
   const form = new FormData()
-  form.append('portal', o.portal)
-  form.append('vendor', o.vendor)
-  form.append('promo', o.promo)
-  const optional = [
-    'settlements',
-    'category',
-    'period_start',
-    'period_end',
-    'standard_rate',
-    'promo_rate',
-    'promo_cutoff',
-  ]
+  for (const key of required) form.append(key, o[key])
   for (const key of optional) if (o[key]) form.append(key, o[key])
   return form
 }
@@ -162,12 +172,28 @@ export async function reconcile(options, signal) {
   return res.json()
 }
 
+/* Bookings against the vendor's weekly claim. A different endpoint and a different
+   result shape from eshop's — see API-INTEGRATION.md §5. */
+export async function reconcileTravel(options, signal) {
+  const res = await request('/reconcile/travel', {
+    method: 'POST',
+    body: buildForm(options, 'travel'),
+    signal,
+  })
+  if (!res.ok) throw await toError(res, 'Reconciliation failed')
+  return res.json()
+}
+
 /* Cross-origin, Content-Disposition is only readable if the server lists it in
    Access-Control-Expose-Headers, so `fallbackName` covers the case where it is hidden. */
-export async function downloadReport(options, signal, fallbackName = 'reconciliation.xlsx') {
-  const res = await request('/reconcile?format=xlsx', {
+export async function downloadReport(
+  options,
+  { signal, fallbackName = 'reconciliation.xlsx', category = 'eshop' } = {},
+) {
+  const path = category === 'travel' ? '/reconcile/travel' : '/reconcile'
+  const res = await request(`${path}?format=xlsx`, {
     method: 'POST',
-    body: buildForm(options),
+    body: buildForm(options, category),
     signal,
   })
   // On failure the body is JSON, not a workbook — check before touching the blob.

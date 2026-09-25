@@ -8,6 +8,7 @@ import { NavLinks, RestartButton, SignedInAs, SignOutButton } from './Sidebar'
    Same links, same tokens, same active-state styling as the desktop sidebar. */
 export default function MobileNav({
   open,
+  items,
   activeId,
   username,
   onNavigate,
@@ -56,6 +57,7 @@ export default function MobileNav({
         </div>
 
         <NavLinks
+          items={items}
           activeId={activeId}
           onNavigate={(id) => {
             onNavigate(id)

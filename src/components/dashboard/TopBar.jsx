@@ -1,37 +1,8 @@
-import { useState } from 'react'
-import { downloadReport, SessionExpiredError } from '../../api/client'
-import { isoDate } from '../../utils/format'
 import Icon from '../common/Icon'
 
-function runMeta(result) {
-  const parts = [result.category]
-  if (result.merchant_id) parts.push('merchant ' + result.merchant_id)
-  parts.push(isoDate(result.period_start) + ' – ' + isoDate(result.period_end))
-  parts.push(result.summary.orders + ' orders')
-  return parts.join(' · ')
-}
-
-/* The xlsx report is a multipart POST, so it is fetched as a blob rather than linked.
-   It re-uploads and re-processes the same files, so it takes as long as the run did. */
-export default function TopBar({ result, files, onOpenNav }) {
-  const [downloading, setDownloading] = useState(false)
-  const [error, setError] = useState(null)
-
-  const download = async () => {
-    if (downloading) return
-    setDownloading(true)
-    setError(null)
-    try {
-      /* Same pattern the server uses: reconciliation-<category>-<start>-to-<end>.xlsx */
-      const name = `reconciliation-${result.category}-${result.period_start}-to-${result.period_end}.xlsx`
-      await downloadReport(files, undefined, name)
-    } catch (err) {
-      if (!(err instanceof SessionExpiredError)) setError(err.message || 'Download failed')
-    } finally {
-      setDownloading(false)
-    }
-  }
-
+/* Presentational: each dashboard owns its own meta line and download call, because the
+   xlsx report is a different endpoint per category. */
+export default function TopBar({ title, meta, downloading, error, onDownload, onOpenNav }) {
   return (
     <header className="sticky top-0 z-20 flex items-center justify-between gap-4 px-5 md:px-8 h-16 bg-ink/85 backdrop-blur border-b border-line/70">
       <div className="flex items-center gap-3 min-w-0">
@@ -45,10 +16,8 @@ export default function TopBar({ result, files, onOpenNav }) {
           <Icon name="menu" className="h-4 w-4" />
         </button>
         <div className="min-w-0">
-          <h1 className="font-display font-600 text-[16px] tracking-tight truncate">
-            Reconciliation summary
-          </h1>
-          <p className="text-[11px] text-mut truncate">{runMeta(result)}</p>
+          <h1 className="font-display font-600 text-[16px] tracking-tight truncate">{title}</h1>
+          <p className="text-[11px] text-mut truncate">{meta}</p>
         </div>
       </div>
 
@@ -60,9 +29,9 @@ export default function TopBar({ result, files, onOpenNav }) {
         )}
         <button
           type="button"
-          onClick={download}
+          onClick={onDownload}
           disabled={downloading}
-          title={error ?? undefined}
+          title={error ?? 'Re-runs the reconciliation and returns the Excel report'}
           className="inline-flex items-center gap-2 rounded-lg bg-emerald px-3 h-9 text-[12.5px] font-600 text-ink enabled:hover:bg-emerald-soft transition-colors disabled:opacity-60 disabled:cursor-wait"
         >
           {downloading ? (
