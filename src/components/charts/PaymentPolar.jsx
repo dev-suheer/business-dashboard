@@ -1,21 +1,24 @@
 import { PolarArea } from 'react-chartjs-2'
-import { GRID, PAYMENT_COLORS, PAYMENT_LABELS } from '../../constants/theme'
+import { PAYMENT_LABELS } from '../../constants/theme'
+import { useTheme } from '../../hooks/useTheme'
 import { dataset } from '../../data/generateDataset'
 import { BASE_OPTIONS } from './chartSetup'
 
-const options = {
-  ...BASE_OPTIONS,
-  scales: {
-    r: {
-      grid: { color: GRID },
-      angleLines: { color: GRID },
-      ticks: { display: false, backdropColor: 'transparent' },
-    },
-  },
-}
-
 export default function PaymentPolar() {
+  const { palette } = useTheme()
+  const { COLORS, GRID, PAYMENT_COLORS } = palette
   const total = dataset.paymentStatus.reduce((a, b) => a + b, 0)
+
+  const options = {
+    ...BASE_OPTIONS,
+    scales: {
+      r: {
+        grid: { color: GRID },
+        angleLines: { color: GRID },
+        ticks: { display: false, backdropColor: 'transparent' },
+      },
+    },
+  }
 
   const data = {
     labels: PAYMENT_LABELS,
@@ -23,7 +26,7 @@ export default function PaymentPolar() {
       {
         data: dataset.paymentStatus,
         backgroundColor: PAYMENT_COLORS.map((c) => c + 'cc'),
-        borderColor: '#0A0F0D',
+        borderColor: COLORS.ink,
         borderWidth: 2,
       },
     ],

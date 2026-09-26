@@ -1,29 +1,32 @@
 import { Line } from 'react-chartjs-2'
-import { GRID } from '../../constants/theme'
+import { useTheme } from '../../hooks/useTheme'
 import { MONTHS, dataset } from '../../data/generateDataset'
 import { BASE_OPTIONS, dollarsK } from './chartSetup'
 
-const options = {
-  ...BASE_OPTIONS,
-  scales: {
-    x: { grid: { display: false }, border: { color: GRID } },
-    y: {
-      grid: { color: GRID },
-      border: { display: false },
-      ticks: { callback: dollarsK },
-    },
-  },
-}
-
 export default function TrendChart() {
+  const { palette } = useTheme()
+  const { COLORS, GRID, accentFill } = palette
+
+  const options = {
+    ...BASE_OPTIONS,
+    scales: {
+      x: { grid: { display: false }, border: { color: GRID } },
+      y: {
+        grid: { color: GRID },
+        border: { display: false },
+        ticks: { callback: dollarsK },
+      },
+    },
+  }
+
   const data = {
     labels: MONTHS,
     datasets: [
       {
         label: 'Ledger',
         data: dataset.ledgerByMonth,
-        borderColor: '#10B981',
-        backgroundColor: 'rgba(16,185,129,0.12)',
+        borderColor: COLORS.emerald,
+        backgroundColor: accentFill(0.12),
         fill: true,
         tension: 0.4,
         borderWidth: 2,
@@ -33,7 +36,7 @@ export default function TrendChart() {
       {
         label: 'Vendor',
         data: dataset.vendorByMonth,
-        borderColor: '#F5A524',
+        borderColor: COLORS.warn,
         backgroundColor: 'transparent',
         fill: false,
         tension: 0.4,

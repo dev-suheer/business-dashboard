@@ -1,13 +1,14 @@
 import { Doughnut } from 'react-chartjs-2'
+import { useTheme } from '../../hooks/useTheme'
 import { BASE_OPTIONS } from './chartSetup'
 
 const options = { ...BASE_OPTIONS, cutout: '72%' }
 
-const COLORS = ['#10B981', '#F5A524', '#F26D6D']
-
 /* Orders against the vendor statement: exact to the cent, matched within tolerance, and
    not on the statement at all. Counts are the summary's integers. */
 export default function MatchDonut({ summary }) {
+  const { palette } = useTheme()
+  const colors = [palette.COLORS.emerald, palette.COLORS.warn, palette.COLORS.bad]
   const exact = summary.orders_exact
   const withinTolerance = summary.orders_matched - summary.orders_exact
   const unmatched = summary.orders - summary.orders_matched
@@ -23,8 +24,8 @@ export default function MatchDonut({ summary }) {
     datasets: [
       {
         data: rows.map((r) => r[1]),
-        backgroundColor: COLORS,
-        borderColor: '#0A0F0D',
+        backgroundColor: colors,
+        borderColor: palette.COLORS.ink,
         borderWidth: 3,
         hoverOffset: 4,
       },
@@ -46,7 +47,7 @@ export default function MatchDonut({ summary }) {
         {rows.map(([label, count], i) => (
           <div key={label} className="flex items-center justify-between">
             <span className="inline-flex items-center gap-2 text-mut">
-              <span className="h-2.5 w-2.5 rounded-sm" style={{ background: COLORS[i] }} />
+              <span className="h-2.5 w-2.5 rounded-sm" style={{ background: colors[i] }} />
               {label}
             </span>
             <span className="font-mono text-txt">{count}</span>

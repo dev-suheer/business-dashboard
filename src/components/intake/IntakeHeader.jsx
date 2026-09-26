@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { healthCheck } from '../../api/client'
 import Icon from '../common/Icon'
 import Logo from '../common/Logo'
+import ThemePicker from '../common/ThemePicker'
 
 const STATUS = {
   checking: { dot: 'bg-mut', label: 'Checking engine…' },
@@ -48,6 +49,7 @@ export default function IntakeHeader({ username, onSignOut }) {
             Signed in as <span className="text-txt">{username}</span>
           </span>
         )}
+        <ThemePicker />
         <button
           type="button"
           onClick={onSignOut}

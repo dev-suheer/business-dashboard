@@ -1,4 +1,5 @@
 import { Doughnut } from 'react-chartjs-2'
+import { useTheme } from '../../hooks/useTheme'
 import { BASE_OPTIONS } from './chartSetup'
 
 const options = { ...BASE_OPTIONS, cutout: '72%' }
@@ -6,13 +7,15 @@ const options = { ...BASE_OPTIONS, cutout: '72%' }
 /* A donut over plain counts: `rows` is [label, count, colour]. `centre` is the figure
    printed in the hole, with `caption` beneath it. */
 export default function CountDonut({ rows, centre, caption }) {
+  const { palette } = useTheme()
+
   const data = {
     labels: rows.map((r) => r[0]),
     datasets: [
       {
         data: rows.map((r) => r[1]),
         backgroundColor: rows.map((r) => r[2]),
-        borderColor: '#0A0F0D',
+        borderColor: palette.COLORS.ink,
         borderWidth: 3,
         hoverOffset: 4,
       },

@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import Icon from '../common/Icon'
 import Logo from '../common/Logo'
+import ThemePicker from '../common/ThemePicker'
 import { NavLinks, RestartButton, SignedInAs, SignOutButton } from './Sidebar'
 
 /* Sub-lg navigation. The reference hid the sidebar below 1024px with no replacement, so
@@ -68,7 +69,12 @@ export default function MobileNav({
         <div className="mt-auto p-3 shrink-0 space-y-2">
           <RestartButton onRestart={onRestart} />
           <SignedInAs username={username} />
-          <SignOutButton onSignOut={onSignOut} />
+          <div className="flex items-center gap-2">
+            <div className="min-w-0 flex-1">
+              <ThemePicker fullWidth menu="up" />
+            </div>
+            <SignOutButton onSignOut={onSignOut} className="shrink-0" />
+          </div>
         </div>
       </aside>
     </div>

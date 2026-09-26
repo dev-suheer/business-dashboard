@@ -1,3 +1,4 @@
+import { useTheme } from '../../../hooks/useTheme'
 import { amount, isoDate, ratePct, signedAmount } from '../../../utils/format'
 import { sign } from '../../../utils/money'
 import Card from '../../common/Card'
@@ -29,6 +30,7 @@ const diffTone = (value) => (sign(value) === 0 ? 'text-mut' : 'text-warn')
 /* Headline figures come from `summary`; the differences it carries are computed over
    matched, non-refunded bookings only. */
 export default function TravelOverviewSection({ result }) {
+  const { palette } = useTheme()
   const { summary, rates, detected, exceptions, claim_periods: claims, adjustments } = result
   const actionable = exceptions.filter((e) => e.severity !== 'info').length
   const informational = exceptions.length - actionable
@@ -116,9 +118,9 @@ export default function TravelOverviewSection({ result }) {
             centre={summary.bookings_matched}
             caption="matched"
             rows={[
-              ['Matched', summary.bookings_matched, '#10B981'],
-              ['Ours only', summary.bookings_portal_only, '#F5A524'],
-              ['Theirs only', summary.bookings_vendor_only, '#F26D6D'],
+              ['Matched', summary.bookings_matched, palette.COLORS.emerald],
+              ['Ours only', summary.bookings_portal_only, palette.COLORS.warn],
+              ['Theirs only', summary.bookings_vendor_only, palette.COLORS.bad],
             ]}
           />
         </Card>

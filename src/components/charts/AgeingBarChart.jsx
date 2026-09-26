@@ -1,22 +1,26 @@
 import { useMemo } from 'react'
 import { Bar } from 'react-chartjs-2'
-import { AGEING_COLORS, AGEING_LABELS, GRID } from '../../constants/theme'
+import { AGEING_LABELS } from '../../constants/theme'
+import { useTheme } from '../../hooks/useTheme'
 import { rand } from '../../data/generateDataset'
 import { BASE_OPTIONS, dollarsUnit } from './chartSetup'
 
-const options = {
-  ...BASE_OPTIONS,
-  scales: {
-    x: { grid: { display: false }, border: { color: GRID } },
-    y: {
-      grid: { color: GRID },
-      border: { display: false },
-      ticks: { callback: dollarsUnit },
-    },
-  },
-}
-
 export default function AgeingBarChart() {
+  const { palette } = useTheme()
+  const { AGEING_COLORS, GRID } = palette
+
+  const options = {
+    ...BASE_OPTIONS,
+    scales: {
+      x: { grid: { display: false }, border: { color: GRID } },
+      y: {
+        grid: { color: GRID },
+        border: { display: false },
+        ticks: { callback: dollarsUnit },
+      },
+    },
+  }
+
   /* The reference generated these inside buildCharts, so they were re-rolled on every run.
      Mount-scoped useMemo reproduces that: a "New reconciliation" yields fresh buckets. */
   const buckets = useMemo(

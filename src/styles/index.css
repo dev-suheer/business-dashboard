@@ -25,6 +25,61 @@
   --font-mono: "JetBrains Mono", monospace;
 }
 
+/* Accent class names stay `emerald-*` so existing utilities keep working; only the
+   hex values swap per `[data-theme]`. */
+:root,
+[data-theme="green"] {
+  --color-ink: #0a0f0d;
+  --color-panel: #111917;
+  --color-panel2: #16211c;
+  --color-line: #223029;
+  --color-line2: #2c3d34;
+  --color-emerald: #10b981;
+  --color-emerald-soft: #34d399;
+  --color-emerald-deep: #0e7c5a;
+  --color-mut: #8a9a90;
+  --color-txt: #e7ede9;
+}
+
+[data-theme="blue"] {
+  --color-ink: #0a0f14;
+  --color-panel: #111820;
+  --color-panel2: #16212b;
+  --color-line: #223240;
+  --color-line2: #2c3e4e;
+  --color-emerald: #3b82f6;
+  --color-emerald-soft: #60a5fa;
+  --color-emerald-deep: #1d4ed8;
+  --color-mut: #8a96a3;
+  --color-txt: #e7edf3;
+}
+
+[data-theme="maroon"] {
+  --color-ink: #12090c;
+  --color-panel: #1a1014;
+  --color-panel2: #221418;
+  --color-line: #3a242c;
+  --color-line2: #4a3038;
+  --color-emerald: #e05c76;
+  --color-emerald-soft: #f07a90;
+  --color-emerald-deep: #9b2844;
+  --color-mut: #9a8a8e;
+  --color-txt: #ede7e9;
+}
+
+[data-theme="yellow"] {
+  --color-ink: #12100a;
+  --color-panel: #1a1710;
+  --color-panel2: #221e14;
+  --color-line: #3a3424;
+  --color-line2: #4a4330;
+  --color-emerald: #e8c547;
+  --color-emerald-soft: #f5d76e;
+  --color-emerald-deep: #a16207;
+  --color-mut: #9a9178;
+  --color-txt: #f3eedd;
+}
+
 /* `font-500` / `font-600` are not real Tailwind utilities — they emit no CSS in the
    reference build, so that text renders at the inherited weight. Pinned to `inherit` so the
    port stays pixel-identical even if a Tailwind release starts resolving bare numeric
@@ -46,11 +101,11 @@
 
 html,
 body {
-  background: #0a0f0d;
+  background: var(--color-ink);
 }
 
 ::selection {
-  background: rgba(52, 211, 153, 0.28);
+  background: color-mix(in srgb, var(--color-emerald-soft) 28%, transparent);
 }
 
 ::-webkit-scrollbar {
@@ -59,28 +114,31 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #0a0f0d;
+  background: var(--color-ink);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #223029;
+  background: var(--color-line);
   border-radius: 999px;
-  border: 2px solid #0a0f0d;
+  border: 2px solid var(--color-ink);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #2c3d34;
+  background: var(--color-line2);
 }
 
 .grain {
-  background-image: radial-gradient(rgba(52, 211, 153, 0.05) 1px, transparent 1px);
+  background-image: radial-gradient(
+    color-mix(in srgb, var(--color-emerald-soft) 5%, transparent) 1px,
+    transparent 1px
+  );
   background-size: 22px 22px;
 }
 
 .glow {
   box-shadow:
-    0 0 0 1px rgba(16, 185, 129, 0.14),
-    0 24px 60px -28px rgba(16, 185, 129, 0.35);
+    0 0 0 1px color-mix(in srgb, var(--color-emerald) 14%, transparent),
+    0 24px 60px -28px color-mix(in srgb, var(--color-emerald) 35%, transparent);
 }
 
 .fade-up {
@@ -137,8 +195,8 @@ body {
 }
 
 .drop-active {
-  border-color: #34d399 !important;
-  background: rgba(52, 211, 153, 0.06);
+  border-color: var(--color-emerald-soft) !important;
+  background: color-mix(in srgb, var(--color-emerald-soft) 6%, transparent);
 }
 
 .sec {

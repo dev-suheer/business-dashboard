@@ -1,5 +1,6 @@
 import Icon from '../common/Icon'
 import Logo from '../common/Logo'
+import ThemePicker from '../common/ThemePicker'
 
 export function NavLinks({ items, activeId, onNavigate }) {
   return (
@@ -49,12 +50,12 @@ export function SignedInAs({ username }) {
   )
 }
 
-export function SignOutButton({ onSignOut }) {
+export function SignOutButton({ onSignOut, className = 'w-full' }) {
   return (
     <button
       type="button"
       onClick={onSignOut}
-      className="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-line2 h-9 text-[13px] text-mut hover:text-txt hover:border-line2 transition-colors"
+      className={`inline-flex items-center justify-center gap-2 rounded-lg border border-line2 h-9 px-3 text-[13px] text-mut hover:text-txt hover:border-line2 transition-colors ${className}`}
     >
       <Icon name="logout" className="h-4 w-4" />
       Sign out
@@ -79,7 +80,12 @@ export default function Sidebar({ items, activeId, username, onNavigate, onResta
       <div className="mt-auto p-3 shrink-0 space-y-2">
         <RestartButton onRestart={onRestart} />
         <SignedInAs username={username} />
-        <SignOutButton onSignOut={onSignOut} />
+        <div className="flex items-center gap-2">
+          <div className="min-w-0 flex-1">
+            <ThemePicker fullWidth menu="up" />
+          </div>
+          <SignOutButton onSignOut={onSignOut} className="shrink-0" />
+        </div>
       </div>
     </aside>
   )
