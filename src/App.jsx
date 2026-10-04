@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   reconcile,
+  reconcileFood,
   reconcileTravel,
   SessionExpiredError,
   setSessionExpiredHandler,
@@ -8,6 +9,7 @@ import {
 import AuthFlow from './components/auth/AuthFlow'
 import './components/charts/chartSetup'
 import DashboardScreen from './components/dashboard/DashboardScreen'
+import FoodDashboardScreen from './components/dashboard/FoodDashboardScreen'
 import TravelDashboardScreen from './components/dashboard/TravelDashboardScreen'
 import IntakeScreen from './components/intake/IntakeScreen'
 import ProcessingOverlay from './components/processing/ProcessingOverlay'
@@ -17,8 +19,8 @@ import { useFileIntake } from './hooks/useFileIntake'
 export default function App() {
   const auth = useAuth()
   const [screen, setScreen] = useState('intake')
-  /* The two categories have different endpoints and different result shapes, so the
-     category decides both the request and the dashboard (guide §12.9). */
+  /* Each category has its own endpoint and result shape, so the category decides both
+     the request and the dashboard (guide §12.9). */
   const [category, setCategory] = useState('eshop')
   const [processing, setProcessing] = useState(false)
   /* The API persists nothing — this response is the only copy of the result. */
@@ -47,7 +49,8 @@ export default function App() {
     setRunError(null)
     setProcessing(true)
     try {
-      const run = category === 'travel' ? reconcileTravel : reconcile
+      const run =
+        category === 'travel' ? reconcileTravel : category === 'food' ? reconcileFood : reconcile
       const data = await run(files, controller.signal)
       setResult(data)
       setScreen('dashboard')
@@ -172,6 +175,16 @@ export default function App() {
 
       {screen === 'dashboard' && result && category === 'travel' && (
         <TravelDashboardScreen
+          result={result}
+          files={files}
+          username={auth.username}
+          onRestart={restart}
+          onSignOut={signOut}
+        />
+      )}
+
+      {screen === 'dashboard' && result && category === 'food' && (
+        <FoodDashboardScreen
           result={result}
           files={files}
           username={auth.username}

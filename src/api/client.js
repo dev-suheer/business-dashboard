@@ -135,7 +135,7 @@ export async function healthCheck() {
 
 // ---------------------------------------------------------------- reconcile
 
-/* The two categories post different fields to different endpoints; unused optional
+/* Each category posts different fields to a different endpoint; unused optional
    fields are omitted entirely rather than sent empty. */
 const FORM_FIELDS = {
   eshop: {
@@ -154,6 +154,16 @@ const FORM_FIELDS = {
     required: ['portal', 'vendor'],
     optional: ['wallet', 'period_start', 'period_end', 'hotel_rate', 'flight_rate', 'vat_rate'],
   },
+  food: {
+    required: ['portal', 'vendor'],
+    optional: [],
+  },
+}
+
+const REPORT_PATH = {
+  eshop: '/reconcile',
+  travel: '/reconcile/travel',
+  food: '/reconcile/food',
 }
 
 function buildForm(o, category = 'eshop') {
@@ -184,13 +194,24 @@ export async function reconcileTravel(options, signal) {
   return res.json()
 }
 
+/* Portal orders against the vendor statement, paired on Partner Order ID. */
+export async function reconcileFood(options, signal) {
+  const res = await request('/reconcile/food', {
+    method: 'POST',
+    body: buildForm(options, 'food'),
+    signal,
+  })
+  if (!res.ok) throw await toError(res, 'Reconciliation failed')
+  return res.json()
+}
+
 /* Cross-origin, Content-Disposition is only readable if the server lists it in
    Access-Control-Expose-Headers, so `fallbackName` covers the case where it is hidden. */
 export async function downloadReport(
   options,
   { signal, fallbackName = 'reconciliation.xlsx', category = 'eshop' } = {},
 ) {
-  const path = category === 'travel' ? '/reconcile/travel' : '/reconcile'
+  const path = REPORT_PATH[category] ?? REPORT_PATH.eshop
   const res = await request(`${path}?format=xlsx`, {
     method: 'POST',
     body: buildForm(options, category),

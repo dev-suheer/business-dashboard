@@ -35,6 +35,9 @@ const STYLES = {
   amount_mismatch: BAD,
   out_of_window: MUTED,
   missing: BAD,
+  /* food verdicts */
+  settled: GOOD,
+  held: WARN,
 }
 
 export default function StatusBadge({ status, label }) {
