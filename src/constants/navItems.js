@@ -1,4 +1,4 @@
-/* One section list per category — the two dashboards share no sections. */
+/* One section list per category — the dashboards share no sections. */
 export const NAV_ITEMS = {
   eshop: [
     { id: 'sec-overview', label: 'Overview', icon: 'overview' },
@@ -13,6 +13,10 @@ export const NAV_ITEMS = {
     { id: 'sec-exceptions', label: 'Findings', icon: 'alert' },
     { id: 'sec-payment-methods', label: 'Payment methods', icon: 'payments' },
     { id: 'sec-wallet', label: 'Wallet', icon: 'trends' },
+  ],
+  food: [
+    { id: 'sec-overview', label: 'Overview', icon: 'overview' },
+    { id: 'sec-exceptions', label: 'Exceptions', icon: 'alert' },
   ],
 }
 

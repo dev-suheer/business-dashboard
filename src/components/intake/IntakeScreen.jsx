@@ -75,7 +75,11 @@ export default function IntakeScreen({
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-4 xl:gap-5">
+          <div
+            className={`grid gap-4 xl:gap-5 ${
+              config.zones.length > 2 ? 'md:grid-cols-3' : 'md:grid-cols-2'
+            }`}
+          >
             {config.zones.map(({ key, title, caption }) => (
               <FileDropzone
                 key={key}

@@ -19,17 +19,22 @@ function ExceptionRow({ exception: e, onShowOrder }) {
       <div className="flex-1 min-w-0 text-[13px]">
         {/* detail is written for end users — shown verbatim. */}
         <p>{e.detail}</p>
-        {e.order_no && (
-          <button
-            type="button"
-            onClick={() => onShowOrder(e.order_no)}
-            className="mt-0.5 font-mono text-[11.5px] text-emerald-soft hover:text-emerald"
-          >
-            {e.order_no}
-          </button>
-        )}
+        {e.order_no &&
+          (onShowOrder ? (
+            <button
+              type="button"
+              onClick={() => onShowOrder(e.order_no)}
+              className="mt-0.5 font-mono text-[11.5px] text-emerald-soft hover:text-emerald"
+            >
+              {e.order_no}
+            </button>
+          ) : (
+            <p className="mt-0.5 font-mono text-[11.5px] text-mut">{e.order_no}</p>
+          ))}
       </div>
-      <span className="font-mono text-[13px] shrink-0">{amount(e.amount)}</span>
+      <span className="font-mono text-[13px] shrink-0">
+        {e.amount == null ? '' : amount(e.amount)}
+      </span>
     </li>
   )
 }
@@ -51,7 +56,7 @@ export default function ExceptionsSection({ exceptions, onShowOrder }) {
 
       {exceptions.length === 0 ? (
         <div className="rounded-xl border border-emerald/30 bg-emerald/[0.04] p-5 text-[13px] text-emerald-soft">
-          Clean cycle — no exceptions.
+          Clean cycle. No exceptions.
         </div>
       ) : (
         <div className="rounded-xl border border-line/70 bg-panel/50 overflow-hidden">
@@ -63,7 +68,7 @@ export default function ExceptionsSection({ exceptions, onShowOrder }) {
             </ul>
           ) : (
             <p className="px-5 py-4 text-[13px] text-emerald-soft border-b border-line/40">
-              Nothing needs action — only informational items below.
+              Nothing needs action. Only informational items below.
             </p>
           )}
 

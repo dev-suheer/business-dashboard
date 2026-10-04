@@ -1,6 +1,6 @@
-/* The two categories have different endpoints, different uploads and different result
-   shapes (API-INTEGRATION.md §1, §12.9), so everything that differs is described here
-   and the intake screen stays data-driven. */
+/* Each category has its own endpoint, uploads and result shape (API-INTEGRATION.md §1,
+   §12.9), so everything that differs is described here and the intake screen stays
+   data-driven. */
 export const CATEGORIES = {
   eshop: {
     key: 'eshop',
@@ -40,6 +40,23 @@ export const CATEGORIES = {
         title: 'Wallet history',
         caption: 'Optional · proves the wallet share',
         required: false,
+      },
+    ],
+  },
+  food: {
+    key: 'food',
+    label: 'Food',
+    blurb: 'Portal orders against the vendor statement.',
+    heading: ['Reconcile a vendor statement', 'against your food orders.'],
+    intro:
+      'Add the portal export and the vendor statement. Orders are paired on Partner Order ID. Only Delivered rows can settle, and dates are not compared.',
+    zones: [
+      { key: 'portal', title: 'Portal export', caption: 'Orders from the portal', required: true },
+      {
+        key: 'vendor',
+        title: 'Vendor statement',
+        caption: 'Account statement from vendor',
+        required: true,
       },
     ],
   },
