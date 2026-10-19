@@ -2,7 +2,16 @@ import Icon from '../common/Icon'
 
 /* Presentational: each dashboard owns its own meta line and download call, because the
    xlsx report is a different endpoint per category. */
-export default function TopBar({ title, meta, downloading, error, onDownload, onOpenNav }) {
+export default function TopBar({
+  title,
+  meta,
+  downloading,
+  error,
+  onDownload,
+  onOpenNav,
+  downloadTitle,
+  downloadNote,
+}) {
   return (
     <header className="sticky top-0 z-20 flex items-center justify-between gap-4 px-5 md:px-8 h-16 bg-ink/85 backdrop-blur border-b border-line/70">
       <div className="flex items-center gap-3 min-w-0">
@@ -27,11 +36,20 @@ export default function TopBar({ title, meta, downloading, error, onDownload, on
             {error}
           </p>
         )}
+        {downloadNote && !error && (
+          <p className="hidden xl:block max-w-[240px] text-right text-[11px] leading-snug text-mut">
+            {downloadNote}
+          </p>
+        )}
         <button
           type="button"
           onClick={onDownload}
           disabled={downloading}
-          title={error ?? 'Re-runs the reconciliation and returns the Excel report'}
+          title={
+            error ??
+            downloadTitle ??
+            'Re-runs the reconciliation and returns the Excel report'
+          }
           className="inline-flex items-center gap-2 rounded-lg bg-emerald px-3 h-9 text-[12.5px] font-600 text-ink enabled:hover:bg-emerald-soft transition-colors disabled:opacity-60 disabled:cursor-wait"
         >
           {downloading ? (
