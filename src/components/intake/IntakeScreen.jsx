@@ -77,7 +77,11 @@ export default function IntakeScreen({
 
           <div
             className={`grid gap-4 xl:gap-5 ${
-              config.zones.length > 2 ? 'md:grid-cols-3' : 'md:grid-cols-2'
+              config.zones.length > 3
+                ? 'md:grid-cols-2 xl:grid-cols-4'
+                : config.zones.length > 2
+                  ? 'md:grid-cols-3'
+                  : 'md:grid-cols-2'
             }`}
           >
             {config.zones.map(({ key, title, caption }) => (

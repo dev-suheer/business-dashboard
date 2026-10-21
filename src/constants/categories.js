@@ -8,7 +8,7 @@ export const CATEGORIES = {
     blurb: 'Order lines against the vendor account ledger.',
     heading: ['Reconcile a vendor statement', 'against your portal sales.'],
     intro:
-      "Add the portal export, the vendor's account statement and the discount base sheet. If the portal export and discount sheet are tabs of the same workbook, select that file for both.",
+      "Add the portal export, the vendor's account statement and the discount base sheet. If the portal export and discount sheet are tabs of the same workbook, select that file for both. The wallet history is optional — supplied, it proves the wallet share of each order actually left a wallet.",
     zones: [
       { key: 'portal', title: 'Portal export', caption: 'One row per order line', required: true },
       {
@@ -18,6 +18,12 @@ export const CATEGORIES = {
         required: true,
       },
       { key: 'promo', title: 'Discount base sheet', caption: 'Promotional SKUs', required: true },
+      {
+        key: 'wallet',
+        title: 'Wallet history',
+        caption: 'Optional · proves the wallet share',
+        required: false,
+      },
     ],
   },
   travel: {
@@ -49,7 +55,7 @@ export const CATEGORIES = {
     blurb: 'Portal orders against the vendor statement.',
     heading: ['Reconcile a vendor statement', 'against your food orders.'],
     intro:
-      'Add the portal export and the vendor statement. Orders are paired on Partner Order ID. Only Delivered rows can settle, and dates are not compared.',
+      'Add the portal export and the vendor statement. Orders are paired on Partner Order ID. Only Delivered rows can settle, and dates are not compared. The wallet history is optional — supplied, it proves the wallet share of each order actually left a wallet.',
     zones: [
       { key: 'portal', title: 'Portal export', caption: 'Orders from the portal', required: true },
       {
@@ -57,6 +63,12 @@ export const CATEGORIES = {
         title: 'Vendor statement',
         caption: 'Account statement from vendor',
         required: true,
+      },
+      {
+        key: 'wallet',
+        title: 'Wallet history',
+        caption: 'Optional · proves the wallet share',
+        required: false,
       },
     ],
   },

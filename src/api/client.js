@@ -142,6 +142,7 @@ const FORM_FIELDS = {
     required: ['portal', 'vendor', 'promo'],
     optional: [
       'settlements',
+      'wallet',
       'category',
       'period_start',
       'period_end',
@@ -156,7 +157,7 @@ const FORM_FIELDS = {
   },
   food: {
     required: ['portal', 'vendor'],
-    optional: [],
+    optional: ['wallet'],
   },
 }
 

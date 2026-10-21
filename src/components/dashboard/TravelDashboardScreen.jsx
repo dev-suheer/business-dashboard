@@ -83,6 +83,8 @@ export default function TravelDashboardScreen({
             error={report.error}
             onDownload={report.download}
             onOpenNav={() => setNavOpen(true)}
+            downloadTitle="Excel report with Dashboard, Orders, Exceptions, Wallet when a wallet history was uploaded, Cashback, and the Portal and Vendor sheets from this upload"
+            downloadNote="The workbook also includes the Portal and Vendor sheets."
           />
 
           <main className="p-5 md:p-8 space-y-10">
