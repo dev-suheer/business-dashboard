@@ -22,11 +22,11 @@ export class ApiError extends Error {
   }
 }
 
-const FIELDS = ['portal', 'vendor', 'promo', 'wallet', 'settlements']
+const FIELDS = ['portal', 'vendor', 'promo', 'wallet', 'settlements', 'finance']
 
 function fieldOf(detail) {
   if (typeof detail === 'string') {
-    return /'(portal|vendor|promo|wallet|settlements)'/.exec(detail)?.[1] ?? null
+    return /'(portal|vendor|promo|wallet|settlements|finance)'/.exec(detail)?.[1] ?? null
   }
   if (Array.isArray(detail)) {
     for (const e of detail) {
@@ -157,7 +157,7 @@ const FORM_FIELDS = {
   },
   food: {
     required: ['portal', 'vendor'],
-    optional: ['wallet'],
+    optional: ['wallet', 'finance'],
   },
 }
 

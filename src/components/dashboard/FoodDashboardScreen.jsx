@@ -61,8 +61,7 @@ export default function FoodDashboardScreen({ result, files, username, onRestart
             error={report.error}
             onDownload={report.download}
             onOpenNav={() => setNavOpen(true)}
-            downloadTitle="Excel report with Dashboard, Orders, Exceptions, Wallet when a wallet history was uploaded, Cashback, and the Portal and Vendor sheets from this upload"
-            downloadNote="The workbook also includes the Portal and Vendor sheets."
+            downloadTitle="Excel report with Dashboard, Orders, Exceptions, Wallet when a wallet history was uploaded, B2C Invoices ERP, the Portal and Vendor sheets, and the Finance Report when that file was uploaded"
           />
 
           <main className="p-5 md:p-8 space-y-10">
